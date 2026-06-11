@@ -132,7 +132,7 @@ function isValidDebt(debt) {
 
 function hasCorruptText(value) {
   const text = JSON.stringify(value);
-  return /[�閮蝝甈撟銝餈皜]/.test(text);
+  return /[\uFFFD\u95AE\u875D\u7508\u649F\u929D\u761D\u876F\u769C\u5697]/.test(text);
 }
 
 function isSeedExpense(expense) {
