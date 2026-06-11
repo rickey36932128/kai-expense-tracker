@@ -1,44 +1,54 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
 
+const elements = {};
 let state = loadState();
 let selectedMonth = new Date();
 
-const tabButtons = document.querySelectorAll(".tab-bar button");
-const screens = document.querySelectorAll(".screen");
-const recentList = document.querySelector("#recent-list");
-const recordsList = document.querySelector("#records-list");
-const recordsTotal = document.querySelector("#records-total");
-const monthTotal = document.querySelector("#month-total");
-const todayTotal = document.querySelector("#today-total");
-const debtList = document.querySelector("#debt-list");
-const debtTotal = document.querySelector("#debt-total");
-const debtCount = document.querySelector("#debt-count");
-const selectedMonthLabel = document.querySelector("#selected-month-label");
-const recordsListTitle = document.querySelector("#records-list-title");
-const offlineStatus = document.querySelector("#offline-status");
-const parsedDate = document.querySelector("#parsed-date");
+document.addEventListener("DOMContentLoaded", init);
 
-document.querySelector("#expense-form").addEventListener("submit", addExpenseFromText);
-document.querySelector("#debt-form").addEventListener("submit", addDebtFromForm);
-document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
-document.querySelector("#next-month").addEventListener("click", () => changeMonth(1));
-document.querySelector("#clear-debts").addEventListener("click", clearDebts);
-document.querySelector("#reset-data").addEventListener("click", resetData);
+function init() {
+  elements.tabButtons = document.querySelectorAll(".tab-bar button");
+  elements.screens = document.querySelectorAll(".screen");
+  elements.recentList = document.querySelector("#recent-list");
+  elements.recordsList = document.querySelector("#records-list");
+  elements.recordsTotal = document.querySelector("#records-total");
+  elements.monthTotal = document.querySelector("#month-total");
+  elements.todayTotal = document.querySelector("#today-total");
+  elements.debtList = document.querySelector("#debt-list");
+  elements.debtTotal = document.querySelector("#debt-total");
+  elements.debtCount = document.querySelector("#debt-count");
+  elements.selectedMonthLabel = document.querySelector("#selected-month-label");
+  elements.recordsListTitle = document.querySelector("#records-list-title");
+  elements.offlineStatus = document.querySelector("#offline-status");
+  elements.parsedDate = document.querySelector("#parsed-date");
+  elements.expenseForm = document.querySelector("#expense-form");
+  elements.expenseInput = document.querySelector("#expense-input");
+  elements.debtForm = document.querySelector("#debt-form");
 
-tabButtons.forEach((button) => {
-  button.addEventListener("click", () => showTab(button.dataset.target));
-});
+  elements.expenseForm.addEventListener("submit", addExpenseFromText);
+  elements.expenseInput.addEventListener("keydown", handleExpenseInputKeydown);
+  elements.debtForm.addEventListener("submit", addDebtFromForm);
+  document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
+  document.querySelector("#next-month").addEventListener("click", () => changeMonth(1));
+  document.querySelector("#clear-debts").addEventListener("click", clearDebts);
+  document.querySelector("#reset-data").addEventListener("click", resetData);
 
-document.querySelectorAll("[data-target-tab]").forEach((button) => {
-  button.addEventListener("click", () => showTab(button.dataset.targetTab));
-});
+  elements.tabButtons.forEach((button) => {
+    button.addEventListener("click", () => showTab(button.dataset.target));
+  });
 
-recentList.addEventListener("click", handleExpenseDelete);
-recordsList.addEventListener("click", handleExpenseDelete);
-debtList.addEventListener("click", handleDebtDelete);
+  document.querySelectorAll("[data-target-tab]").forEach((button) => {
+    button.addEventListener("click", () => showTab(button.dataset.targetTab));
+  });
 
-render();
-registerServiceWorker();
+  elements.recentList.addEventListener("click", handleExpenseDelete);
+  elements.recordsList.addEventListener("click", handleExpenseDelete);
+  elements.debtList.addEventListener("click", handleDebtDelete);
+
+  saveState();
+  render();
+  registerServiceWorker();
+}
 
 function getDefaultState() {
   return {
@@ -68,7 +78,9 @@ function createDebt(friend, item, amount, date = new Date()) {
 }
 
 function createId() {
-  if (crypto.randomUUID) return crypto.randomUUID();
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
@@ -120,28 +132,16 @@ function isValidDebt(debt) {
 
 function hasCorruptText(value) {
   const text = JSON.stringify(value);
-  const corruptMarkers = [
-    "\uFFFD",
-    "\u95AE",
-    "\u875D",
-    "\u7508",
-    "\u649F",
-    "\u929D",
-    "\u761D",
-    "\u876F",
-    "\u769C",
-    "\u5697",
-  ];
-  return corruptMarkers.some((marker) => text.includes(marker)) || /\?[\uE000-\uF8FF]/.test(text);
+  return /[�閮蝝甈撟銝餈皜]/.test(text);
 }
 
 function isSeedExpense(expense) {
-  const seeds = new Set(["早餐:85", "咖啡:85", "捷運:35", "午餐:120"]);
+  const seeds = new Set(["咖啡:85", "早餐:85", "捷運:35", "午餐:120"]);
   return seeds.has(`${expense.title}:${Number(expense.amount)}`);
 }
 
 function isSeedDebt(debt) {
-  const seeds = new Set(["阿明:咖啡:280", "小華:晚餐代墊:1200", "佳佳:電影票:400"]);
+  const seeds = new Set(["阿明:咖啡:280", "小美:電影票:1200", "家豪:宵夜:400"]);
   return seeds.has(`${debt.friend}:${debt.item}:${Number(debt.amount)}`);
 }
 
@@ -172,15 +172,15 @@ function getSelectedMonthKey() {
 }
 
 function inferCategory(title) {
-  if (/早餐|午餐|晚餐|咖啡|飲料|便當|餐|宵夜|甜點/.test(title)) return "餐飲";
-  if (/捷運|公車|計程車|uber|高鐵|火車|停車|加油/i.test(title)) return "交通";
-  if (/衣服|鞋|包|購物|蝦皮|momo|pchome/i.test(title)) return "購物";
-  if (/超市|全聯|家樂福|日用品|藥局/.test(title)) return "生活";
+  if (/早餐|午餐|晚餐|咖啡|飲料|便當|餐|麵|飯|宵夜/i.test(title)) return "飲食";
+  if (/捷運|公車|高鐵|uber|計程車|油錢|停車/i.test(title)) return "交通";
+  if (/網購|衣服|鞋|momo|pchome|蝦皮|購物/i.test(title)) return "購物";
+  if (/全聯|家樂福|超市|日用品|衛生紙/i.test(title)) return "生活";
   return "其他";
 }
 
 function parseExpense(text) {
-  const match = text.trim().match(/(.+?)\s*([0-9,]+)$/);
+  const match = text.trim().match(/^(.+?)\s*([0-9,]+)$/);
   if (!match) return null;
 
   const title = match[1].trim();
@@ -193,18 +193,31 @@ function parseExpense(text) {
 
 function addExpenseFromText(event) {
   event.preventDefault();
-  const input = document.querySelector("#expense-input");
-  const expense = parseExpense(input.value);
+  const expense = parseExpense(elements.expenseInput.value);
 
   if (!expense) {
-    input.focus();
+    elements.expenseInput.focus();
+    elements.expenseInput.classList.add("is-invalid");
+    window.setTimeout(() => elements.expenseInput.classList.remove("is-invalid"), 500);
     return;
   }
 
   state.expenses.unshift(expense);
   saveState();
-  input.value = "";
+  elements.expenseInput.value = "";
+  elements.expenseInput.focus();
   render();
+}
+
+function handleExpenseInputKeydown(event) {
+  if (event.key !== "Enter" || event.isComposing) return;
+
+  event.preventDefault();
+  if (typeof elements.expenseForm.requestSubmit === "function") {
+    elements.expenseForm.requestSubmit();
+  } else {
+    elements.expenseForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  }
 }
 
 function addDebtFromForm(event) {
@@ -259,8 +272,8 @@ function changeMonth(delta) {
 }
 
 function showTab(target) {
-  tabButtons.forEach((item) => item.classList.toggle("active", item.dataset.target === target));
-  screens.forEach((screen) => {
+  elements.tabButtons.forEach((item) => item.classList.toggle("active", item.dataset.target === target));
+  elements.screens.forEach((screen) => {
     screen.classList.toggle("active", screen.dataset.screen === target);
   });
 }
@@ -274,17 +287,17 @@ function render() {
   const selectedExpenses = state.expenses.filter((expense) => getMonthKey(expense.date) === getSelectedMonthKey());
   const debtSum = state.debts.reduce((sum, debt) => sum + Number(debt.amount), 0);
 
-  monthTotal.textContent = formatTwd(sumAmounts(thisMonthExpenses));
-  todayTotal.textContent = formatTwd(sumAmounts(todayExpenses));
-  recordsTotal.textContent = formatTwd(sumAmounts(selectedExpenses));
-  selectedMonthLabel.textContent = `${selectedMonth.getFullYear()} 年 ${selectedMonth.getMonth() + 1} 月`;
-  recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月紀錄`;
-  debtTotal.textContent = formatTwd(debtSum);
-  debtCount.textContent = `${state.debts.length} 筆未收`;
+  elements.monthTotal.textContent = formatTwd(sumAmounts(thisMonthExpenses));
+  elements.todayTotal.textContent = formatTwd(sumAmounts(todayExpenses));
+  elements.recordsTotal.textContent = formatTwd(sumAmounts(selectedExpenses));
+  elements.selectedMonthLabel.textContent = `${selectedMonth.getFullYear()} 年 ${selectedMonth.getMonth() + 1} 月`;
+  elements.recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月紀錄`;
+  elements.debtTotal.textContent = formatTwd(debtSum);
+  elements.debtCount.textContent = `${state.debts.length} 筆`;
 
   renderLatestExpense(state.expenses[0]);
-  renderExpenseList(recentList, recentExpenses, "目前沒有紀錄。");
-  renderExpenseList(recordsList, selectedExpenses, "這個月份還沒有支出。");
+  renderExpenseList(elements.recentList, recentExpenses, "目前沒有紀錄");
+  renderExpenseList(elements.recordsList, selectedExpenses, "這個月還沒有支出");
   renderDebtList();
 }
 
@@ -297,14 +310,14 @@ function renderLatestExpense(expense) {
     document.querySelector("#parsed-title").textContent = "尚未新增";
     document.querySelector("#parsed-amount").textContent = "NT$ 0";
     document.querySelector("#parsed-category").textContent = "-";
-    parsedDate.textContent = "-";
+    elements.parsedDate.textContent = "-";
     return;
   }
 
   document.querySelector("#parsed-title").textContent = expense.title;
   document.querySelector("#parsed-amount").textContent = `-${formatTwd(expense.amount)}`;
   document.querySelector("#parsed-category").textContent = expense.category;
-  parsedDate.textContent = formatDateLabel(expense.date);
+  elements.parsedDate.textContent = formatDateLabel(expense.date);
 }
 
 function renderExpenseList(target, expenses, emptyText) {
@@ -332,11 +345,11 @@ function renderExpenseList(target, expenses, emptyText) {
 
 function renderDebtList() {
   if (!state.debts.length) {
-    debtList.innerHTML = `<li class="empty-state">目前沒有朋友欠款。</li>`;
+    elements.debtList.innerHTML = `<li class="empty-state">目前沒有朋友欠款</li>`;
     return;
   }
 
-  debtList.innerHTML = state.debts
+  elements.debtList.innerHTML = state.debts
     .map(
       (debt) => `
         <li>
@@ -355,7 +368,7 @@ function renderDebtList() {
 
 function getCategoryClass(category) {
   const map = {
-    餐飲: "food",
+    飲食: "food",
     交通: "transit",
     購物: "shopping",
     生活: "grocery",
@@ -374,14 +387,15 @@ function escapeHtml(value) {
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
-    offlineStatus.textContent = "不支援離線";
+    elements.offlineStatus.textContent = "此瀏覽器不支援";
     return;
   }
 
   try {
-    await navigator.serviceWorker.register("./sw.js?v=5");
-    offlineStatus.textContent = "已可離線使用";
+    const registration = await navigator.serviceWorker.register("./sw.js?v=6");
+    await registration.update();
+    elements.offlineStatus.textContent = "可離線使用";
   } catch {
-    offlineStatus.textContent = "離線功能尚未啟用";
+    elements.offlineStatus.textContent = "離線功能尚未啟用";
   }
 }
