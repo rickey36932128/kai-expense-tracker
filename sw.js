@@ -1,18 +1,17 @@
-const CACHE_NAME = "kai-expense-tracker-v5";
+const CACHE_NAME = "kai-expense-tracker-v6";
 const ASSETS = [
   "./",
-  "./index.html?v=5",
-  "./styles.css?v=5",
-  "./script.js?v=5",
-  "./manifest.webmanifest?v=5",
+  "./index.html?v=6",
+  "./styles.css?v=6",
+  "./script.js?v=6",
+  "./manifest.webmanifest?v=6",
   "./icons/icon-192.png",
+  "./icons/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 
 self.addEventListener("activate", (event) => {
@@ -28,13 +27,9 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("./index.html?v=5")));
+    event.respondWith(fetch(event.request).catch(() => caches.match("./index.html?v=6")));
     return;
   }
 
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
-  );
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
