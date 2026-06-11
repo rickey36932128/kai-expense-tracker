@@ -1,10 +1,10 @@
-const CACHE_NAME = "kai-expense-tracker-v7";
+const CACHE_NAME = "kai-expense-tracker-v8";
 const ASSETS = [
   "./",
-  "./index.html?v=7",
-  "./styles.css?v=7",
-  "./script.js?v=7",
-  "./manifest.webmanifest?v=7",
+  "./index.html?v=8",
+  "./styles.css?v=8",
+  "./script.js?v=8",
+  "./manifest.webmanifest?v=8",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];
@@ -35,12 +35,10 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-
   if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("./index.html?v=7")));
+    event.respondWith(fetch(event.request).catch(() => caches.match("./index.html?v=8")));
     return;
   }
-
   event.respondWith(
     fetch(event.request)
       .then((response) => {
