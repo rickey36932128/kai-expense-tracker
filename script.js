@@ -1,18 +1,5 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
 
-const defaultState = {
-  expenses: [
-    createExpense("咖啡", 85, "餐飲"),
-    createExpense("捷運", 35, "交通"),
-    createExpense("午餐", 120, "餐飲"),
-  ],
-  debts: [
-    createDebt("阿明", "宵夜", 280),
-    createDebt("小婷", "演唱會票", 1200, offsetDate(-2)),
-    createDebt("阿豪", "計程車", 400, offsetDate(-7)),
-  ],
-};
-
 let state = loadState();
 let selectedMonth = new Date();
 
@@ -52,9 +39,24 @@ debtList.addEventListener("click", handleDebtDelete);
 render();
 registerServiceWorker();
 
+function getDefaultState() {
+  return {
+    expenses: [
+      createExpense("早餐", 85, "餐飲"),
+      createExpense("捷運", 35, "交通"),
+      createExpense("午餐", 120, "餐飲"),
+    ],
+    debts: [
+      createDebt("阿明", "咖啡", 280),
+      createDebt("小華", "晚餐代墊", 1200, offsetDate(-2)),
+      createDebt("佳佳", "電影票", 400, offsetDate(-7)),
+    ],
+  };
+}
+
 function createExpense(title, amount, category = "其他", date = new Date()) {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     title,
     amount,
     category,
@@ -64,12 +66,17 @@ function createExpense(title, amount, category = "其他", date = new Date()) {
 
 function createDebt(friend, item, amount, date = new Date()) {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     friend,
     item,
     amount,
     date: new Date(date).toISOString(),
   };
+}
+
+function createId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function offsetDate(days) {
@@ -80,15 +87,38 @@ function offsetDate(days) {
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return structuredClone(defaultState);
-  }
+  if (!raw) return getDefaultState();
 
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!isValidState(parsed) || hasCorruptText(parsed)) {
+      return getDefaultState();
+    }
+    return parsed;
   } catch {
-    return structuredClone(defaultState);
+    return getDefaultState();
   }
+}
+
+function isValidState(value) {
+  return value && Array.isArray(value.expenses) && Array.isArray(value.debts);
+}
+
+function hasCorruptText(value) {
+  const text = JSON.stringify(value);
+  const corruptMarkers = [
+    "\uFFFD",
+    "\u95AE",
+    "\u875D",
+    "\u7508",
+    "\u649F",
+    "\u929D",
+    "\u761D",
+    "\u876F",
+    "\u769C",
+    "\u5697",
+  ];
+  return corruptMarkers.some((marker) => text.includes(marker)) || /\?[\uE000-\uF8FF]/.test(text);
 }
 
 function saveState() {
@@ -103,9 +133,7 @@ function formatDateLabel(value) {
   const date = new Date(value);
   const today = new Date();
 
-  if (date.toDateString() === today.toDateString()) {
-    return "今天";
-  }
+  if (date.toDateString() === today.toDateString()) return "今天";
 
   return `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
 }
@@ -120,10 +148,10 @@ function getSelectedMonthKey() {
 }
 
 function inferCategory(title) {
-  if (/咖啡|午餐|晚餐|早餐|飲料|宵夜|餐|飯|麵/.test(title)) return "餐飲";
-  if (/捷運|公車|交通|車|uber|計程車/i.test(title)) return "交通";
-  if (/超市|全聯|家樂福|食材/.test(title)) return "食材";
-  if (/便利|購物|衣|鞋|蝦皮/.test(title)) return "購物";
+  if (/早餐|午餐|晚餐|咖啡|飲料|便當|餐|宵夜|甜點/.test(title)) return "餐飲";
+  if (/捷運|公車|計程車|uber|高鐵|火車|停車|加油/i.test(title)) return "交通";
+  if (/衣服|鞋|包|購物|蝦皮|momo|pchome/i.test(title)) return "購物";
+  if (/超市|全聯|家樂福|日用品|藥局/.test(title)) return "生活";
   return "其他";
 }
 
@@ -134,9 +162,7 @@ function parseExpense(text) {
   const title = match[1].trim();
   const amount = Number(match[2].replaceAll(",", ""));
 
-  if (!title || !Number.isFinite(amount) || amount <= 0) {
-    return null;
-  }
+  if (!title || !Number.isFinite(amount) || amount <= 0) return null;
 
   return createExpense(title, amount, inferCategory(title));
 }
@@ -164,9 +190,7 @@ function addDebtFromForm(event) {
   const item = String(formData.get("item") || "").trim();
   const amount = Number(String(formData.get("amount") || "").replaceAll(",", ""));
 
-  if (!friend || !item || !Number.isFinite(amount) || amount <= 0) {
-    return;
-  }
+  if (!friend || !item || !Number.isFinite(amount) || amount <= 0) return;
 
   state.debts.unshift(createDebt(friend, item, amount));
   saveState();
@@ -199,7 +223,7 @@ function clearDebts() {
 }
 
 function resetData() {
-  state = structuredClone(defaultState);
+  state = getDefaultState();
   selectedMonth = new Date();
   saveState();
   render();
@@ -230,13 +254,13 @@ function render() {
   todayTotal.textContent = formatTwd(sumAmounts(todayExpenses));
   recordsTotal.textContent = formatTwd(sumAmounts(selectedExpenses));
   selectedMonthLabel.textContent = `${selectedMonth.getFullYear()} 年 ${selectedMonth.getMonth() + 1} 月`;
-  recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月明細`;
+  recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月紀錄`;
   debtTotal.textContent = formatTwd(debtSum);
-  debtCount.textContent = `${state.debts.length} 筆未結清`;
+  debtCount.textContent = `${state.debts.length} 筆未收`;
 
   renderLatestExpense(state.expenses[0]);
-  renderExpenseList(recentList, recentExpenses, "還沒有紀錄，先輸入「午餐 120」。");
-  renderExpenseList(recordsList, selectedExpenses, "這個月份還沒有紀錄。");
+  renderExpenseList(recentList, recentExpenses, "還沒有紀錄，輸入「午餐 120」開始。");
+  renderExpenseList(recordsList, selectedExpenses, "這個月份還沒有支出。");
   renderDebtList();
 }
 
@@ -269,7 +293,7 @@ function renderExpenseList(target, expenses, emptyText) {
             <p>${escapeHtml(expense.category)} · ${formatDateLabel(expense.date)}</p>
           </div>
           <b>-${formatTwd(expense.amount)}</b>
-          <button class="delete-button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">×</button>
+          <button class="delete-button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">x</button>
         </li>
       `
     )
@@ -292,7 +316,7 @@ function renderDebtList() {
             <p>${escapeHtml(debt.item)} · ${formatDateLabel(debt.date)}</p>
           </div>
           <b>${formatTwd(debt.amount)}</b>
-          <button class="delete-button" data-delete-debt="${debt.id}" aria-label="結清 ${escapeHtml(debt.friend)}">×</button>
+          <button class="delete-button" data-delete-debt="${debt.id}" aria-label="刪除 ${escapeHtml(debt.friend)}">x</button>
         </li>
       `
     )
@@ -304,7 +328,7 @@ function getCategoryClass(category) {
     餐飲: "food",
     交通: "transit",
     購物: "shopping",
-    食材: "grocery",
+    生活: "grocery",
   };
   return map[category] || "other";
 }
@@ -320,14 +344,14 @@ function escapeHtml(value) {
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
-    offlineStatus.textContent = "不支援";
+    offlineStatus.textContent = "不支援離線";
     return;
   }
 
   try {
     await navigator.serviceWorker.register("./sw.js");
-    offlineStatus.textContent = "已啟用";
+    offlineStatus.textContent = "已可離線使用";
   } catch {
-    offlineStatus.textContent = "需用網站開啟";
+    offlineStatus.textContent = "離線功能尚未啟用";
   }
 }
