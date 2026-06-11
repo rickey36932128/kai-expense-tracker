@@ -13,14 +13,10 @@
 - 資料存在手機瀏覽器本機。
 - 支援 PWA manifest 與離線快取。
 
-## 在 iPhone 使用
+## 網址
 
-PWA 需要透過網站網址開啟，不能只靠直接打開本機檔案。
+GitHub Pages URL:
 
-部署到網站後，在 iPhone Safari 打開網址，按分享按鈕，選「加入主畫面」。
+https://rickey36932128.github.io/kai-expense-tracker/
 
-## 本機預覽
-
-在電腦上可以直接開 `index.html` 看介面與大部分互動。
-
-如果要測試 PWA 安裝與離線快取，請用本機網站伺服器或部署到 HTTPS 網站。
+_Last deployment trigger: 2026-06-11_
