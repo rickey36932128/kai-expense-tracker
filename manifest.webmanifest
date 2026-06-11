@@ -1,8 +1,8 @@
 {
   "name": "KAI 記帳",
   "short_name": "KAI 記帳",
-  "description": "聊天式本機記帳與朋友欠款紀錄",
-  "start_url": "./index.html",
+  "description": "個人記帳與朋友欠款紀錄",
+  "start_url": "./index.html?v=4",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f2f2f7",
