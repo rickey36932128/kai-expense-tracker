@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-title" content="KAI 記帳" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>KAI 記帳</title>
-    <link rel="manifest" href="manifest.webmanifest?v=5" />
+    <link rel="manifest" href="manifest.webmanifest?v=6" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=5" />
+    <link rel="stylesheet" href="styles.css?v=6" />
   </head>
   <body>
     <main class="phone-shell" aria-label="KAI 記帳 App">
@@ -52,20 +52,27 @@
         <section class="list-section home-list-section">
           <div class="section-heading">
             <h2>最近紀錄</h2>
-            <button type="button" data-target-tab="records">看全部</button>
+            <button type="button" data-target-tab="records">查看全部</button>
           </div>
           <ul class="transaction-list" id="recent-list"></ul>
         </section>
 
         <form class="composer" id="expense-form">
-          <input id="expense-input" aria-label="輸入記帳內容" placeholder="輸入一句話" autocomplete="off" />
-          <button aria-label="送出">+</button>
+          <input
+            id="expense-input"
+            aria-label="輸入記帳文字"
+            placeholder="輸入一句話"
+            autocomplete="off"
+            enterkeyhint="send"
+            inputmode="text"
+          />
+          <button type="submit" aria-label="送出">+</button>
         </form>
       </section>
 
       <section class="screen" data-screen="records">
         <header class="top-bar">
-          <p class="eyebrow">統計</p>
+          <p class="eyebrow">月份</p>
           <h1>紀錄</h1>
         </header>
         <div class="month-switcher">
@@ -90,30 +97,30 @@
         </header>
 
         <section class="debt-total">
-          <p>目前待收總額</p>
+          <p>朋友欠你的總金額</p>
           <strong id="debt-total">NT$ 0</strong>
-          <span id="debt-count">0 筆未收</span>
+          <span id="debt-count">0 筆</span>
         </section>
 
         <form class="debt-form" id="debt-form">
           <label>
             <span>朋友</span>
-            <input id="friend-name" name="friend" placeholder="例如：阿明" autocomplete="off" />
+            <input id="friend-name" name="friend" placeholder="例如：小明" autocomplete="off" />
           </label>
           <label>
             <span>項目</span>
-            <input id="debt-item" name="item" placeholder="例如：晚餐代墊" autocomplete="off" />
+            <input id="debt-item" name="item" placeholder="例如：晚餐" autocomplete="off" />
           </label>
           <label>
             <span>金額</span>
-            <input id="debt-amount" name="amount" inputmode="numeric" placeholder="例如：320" autocomplete="off" />
+            <input id="debt-amount" name="amount" inputmode="numeric" placeholder="例如：120" autocomplete="off" />
           </label>
           <button type="submit">新增欠款</button>
         </form>
 
         <section class="list-section fill-section">
           <div class="section-heading">
-            <h2>欠款明細</h2>
+            <h2>欠款清單</h2>
             <button type="button" id="clear-debts">清空欠款</button>
           </div>
           <ul class="debt-list" id="debt-list"></ul>
@@ -132,7 +139,7 @@
           </li>
           <li>
             <span>資料儲存</span>
-            <strong>只存在這台裝置</strong>
+            <strong>只存在這台手機</strong>
           </li>
           <li>
             <span>離線狀態</span>
@@ -140,7 +147,7 @@
           </li>
           <li>
             <span>加入主畫面</span>
-            <strong>Safari 分享後加入</strong>
+            <strong>Safari 分享選單</strong>
           </li>
         </ul>
 
@@ -150,24 +157,24 @@
       </section>
 
       <nav class="tab-bar" aria-label="主要導覽">
-        <button class="active" data-target="home" aria-label="首頁">
+        <button class="active" type="button" data-target="home" aria-label="首頁">
           <span>+</span>
           首頁
         </button>
-        <button data-target="records" aria-label="紀錄">
+        <button type="button" data-target="records" aria-label="紀錄">
           <span>#</span>
           紀錄
         </button>
-        <button data-target="debts" aria-label="欠款">
+        <button type="button" data-target="debts" aria-label="欠款">
           <span>$</span>
           欠款
         </button>
-        <button data-target="settings" aria-label="設定">
+        <button type="button" data-target="settings" aria-label="設定">
           <span>*</span>
           設定
         </button>
       </nav>
     </main>
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
   </body>
 </html>
