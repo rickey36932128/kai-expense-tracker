@@ -1,0 +1,19 @@
+{
+  "name": "KAI 記帳",
+  "short_name": "KAI 記帳",
+  "description": "個人記帳與朋友欠款紀錄",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f2f7",
+  "theme_color": "#f2f2f7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

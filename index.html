@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f2f2f7" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="KAI 記帳" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>KAI 記帳</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="phone-shell" aria-label="KAI 記帳 App">
+      <section class="screen active" data-screen="home">
+        <header class="top-bar">
+          <p class="eyebrow">今天</p>
+          <h1>記帳</h1>
+        </header>
+
+        <section class="summary-band">
+          <div>
+            <p>本月支出</p>
+            <strong id="month-total">NT$ 0</strong>
+          </div>
+          <div>
+            <p>今日支出</p>
+            <strong id="today-total">NT$ 0</strong>
+          </div>
+        </section>
+
+        <section class="chat-panel" aria-label="聊天式記帳">
+          <div class="message incoming">
+            <span>輸入一句話，例如「午餐 120」。</span>
+          </div>
+          <div class="message outgoing" id="latest-message">
+            <span>咖啡 85</span>
+          </div>
+          <article class="parsed-card" id="parsed-card">
+            <div>
+              <p>最近新增</p>
+              <h2 id="parsed-title">咖啡</h2>
+            </div>
+            <strong id="parsed-amount">-NT$ 85</strong>
+            <dl>
+              <div>
+                <dt>分類</dt>
+                <dd id="parsed-category">餐飲</dd>
+              </div>
+              <div>
+                <dt>日期</dt>
+                <dd>今天</dd>
+              </div>
+            </dl>
+          </article>
+        </section>
+
+        <section class="list-section">
+          <div class="section-heading">
+            <h2>最近紀錄</h2>
+            <button type="button" data-target-tab="records">查看全部</button>
+          </div>
+          <ul class="transaction-list" id="recent-list"></ul>
+        </section>
+
+        <form class="composer" id="expense-form">
+          <input id="expense-input" aria-label="輸入記帳內容" placeholder="午餐 120" autocomplete="off" />
+          <button aria-label="送出">↑</button>
+        </form>
+      </section>
+
+      <section class="screen" data-screen="records">
+        <header class="top-bar">
+          <p class="eyebrow">明細</p>
+          <h1>紀錄</h1>
+        </header>
+        <div class="month-switcher">
+          <button type="button" id="prev-month" aria-label="上一個月">‹</button>
+          <strong id="selected-month-label">本月</strong>
+          <button type="button" id="next-month" aria-label="下一個月">›</button>
+        </div>
+        <section class="month-total">
+          <p>選取月份支出</p>
+          <strong id="records-total">NT$ 0</strong>
+        </section>
+        <section class="list-section">
+          <h2 id="records-list-title">本月明細</h2>
+          <ul class="transaction-list" id="records-list"></ul>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="debts">
+        <header class="top-bar">
+          <p class="eyebrow">朋友欠款</p>
+          <h1>欠款</h1>
+        </header>
+
+        <section class="debt-total">
+          <p>目前朋友待還</p>
+          <strong id="debt-total">NT$ 0</strong>
+          <span id="debt-count">0 筆未結清</span>
+        </section>
+
+        <form class="debt-form" id="debt-form">
+          <label>
+            <span>朋友</span>
+            <input id="friend-name" name="friend" placeholder="例如：阿明" autocomplete="off" />
+          </label>
+          <label>
+            <span>項目</span>
+            <input id="debt-item" name="item" placeholder="例如：電影票" autocomplete="off" />
+          </label>
+          <label>
+            <span>金額</span>
+            <input id="debt-amount" name="amount" inputmode="numeric" placeholder="例如：320" autocomplete="off" />
+          </label>
+          <button type="submit">新增欠款</button>
+        </form>
+
+        <section class="list-section">
+          <div class="section-heading">
+            <h2>未結清</h2>
+            <button type="button" id="clear-debts">全部結清</button>
+          </div>
+          <ul class="debt-list" id="debt-list"></ul>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="settings">
+        <header class="top-bar">
+          <p class="eyebrow">偏好</p>
+          <h1>設定</h1>
+        </header>
+        <ul class="settings-list">
+          <li>
+            <span>幣別</span>
+            <strong>TWD</strong>
+          </li>
+          <li>
+            <span>資料位置</span>
+            <strong>手機瀏覽器本機</strong>
+          </li>
+          <li>
+            <span>離線開啟</span>
+            <strong id="offline-status">準備中</strong>
+          </li>
+          <li>
+            <span>安裝方式</span>
+            <strong>Safari 加入主畫面</strong>
+          </li>
+        </ul>
+
+        <section class="danger-zone">
+          <button type="button" id="reset-data">清除示範資料</button>
+        </section>
+      </section>
+
+      <nav class="tab-bar" aria-label="主要分頁">
+        <button class="active" data-target="home" aria-label="首頁">
+          <span>⌂</span>
+          首頁
+        </button>
+        <button data-target="records" aria-label="紀錄">
+          <span>≡</span>
+          紀錄
+        </button>
+        <button data-target="debts" aria-label="欠款">
+          <span>$</span>
+          欠款
+        </button>
+        <button data-target="settings" aria-label="設定">
+          <span>⚙</span>
+          設定
+        </button>
+      </nav>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>

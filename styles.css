@@ -1,0 +1,499 @@
+:root {
+  color-scheme: light;
+  --blue: #007aff;
+  --green: #34c759;
+  --red: #ff3b30;
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface-2: #f9f9fb;
+  --text: #111111;
+  --muted: #6e6e73;
+  --line: #d8d8df;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  background: #e5e5ea;
+  color: var(--text);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  background: none;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+.phone-shell {
+  position: relative;
+  width: min(100vw, 430px);
+  height: min(100vh, 932px);
+  min-height: 720px;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+}
+
+.screen {
+  display: none;
+  height: 100%;
+  padding: calc(24px + env(safe-area-inset-top)) 18px 94px;
+  overflow-y: auto;
+}
+
+.screen.active {
+  display: block;
+}
+
+.top-bar {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 34px;
+  line-height: 1.06;
+  letter-spacing: 0;
+}
+
+h2 {
+  font-size: 17px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.summary-band,
+.month-total,
+.debt-total,
+.parsed-card {
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.summary-band {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.summary-band div {
+  padding: 16px;
+  background: var(--surface);
+}
+
+.summary-band p,
+.month-total p,
+.debt-total p,
+.parsed-card p {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.summary-band strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 20px;
+}
+
+.chat-panel {
+  display: flex;
+  min-height: 258px;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.message {
+  display: flex;
+}
+
+.message span {
+  max-width: 78%;
+  padding: 10px 13px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.message.incoming span {
+  background: var(--surface);
+}
+
+.message.outgoing {
+  justify-content: flex-end;
+}
+
+.message.outgoing span {
+  background: var(--blue);
+  color: white;
+}
+
+.parsed-card {
+  align-self: flex-end;
+  width: 86%;
+  padding: 14px;
+}
+
+.parsed-card > strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--red);
+  font-size: 24px;
+}
+
+.parsed-card dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.parsed-card dl div {
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.list-section {
+  margin-top: 18px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.section-heading button {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.transaction-list,
+.debt-list,
+.settings-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.transaction-list li,
+.debt-list li,
+.settings-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-list li {
+  grid-template-columns: 1fr auto;
+}
+
+.transaction-list li:last-child,
+.debt-list li:last-child,
+.settings-list li:last-child {
+  border-bottom: 0;
+}
+
+.transaction-list p,
+.debt-list p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.transaction-list b {
+  color: var(--red);
+  font-size: 15px;
+}
+
+.debt-list b {
+  color: var(--green);
+  font-size: 15px;
+}
+
+.empty-state {
+  display: block;
+  padding: 18px 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.category-dot,
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  background: rgba(0, 122, 255, 0.14);
+  color: var(--blue);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.food {
+  background: rgba(255, 149, 0, 0.2);
+}
+
+.transit {
+  background: rgba(0, 122, 255, 0.18);
+}
+
+.shopping {
+  background: rgba(175, 82, 222, 0.17);
+}
+
+.grocery,
+.other {
+  background: rgba(52, 199, 89, 0.18);
+}
+
+.delete-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--red);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.composer {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 1fr 36px;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.composer input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0 8px;
+  background: transparent;
+  font-size: 16px;
+}
+
+.composer button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.month-switcher {
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 6px;
+  border-radius: 13px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.month-switcher button {
+  height: 34px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 26px;
+}
+
+.month-total,
+.debt-total {
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.month-total strong,
+.debt-total strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 30px;
+}
+
+.debt-total span {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.debt-form {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.debt-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.debt-form label span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.debt-form input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  outline: 0;
+  padding: 0 12px;
+  background: var(--surface-2);
+  font-size: 16px;
+}
+
+.debt-form input:focus {
+  border-color: rgba(0, 122, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+.debt-form button {
+  min-height: 44px;
+  border-radius: 12px;
+  background: var(--blue);
+  color: white;
+  font-weight: 800;
+}
+
+.settings-list span {
+  color: var(--muted);
+}
+
+.danger-zone {
+  margin-top: 18px;
+}
+
+.danger-zone button {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 14px;
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--red);
+  font-weight: 800;
+}
+
+.tab-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: calc(70px + env(safe-area-inset-bottom));
+  padding: 7px 6px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(249, 249, 251, 0.94);
+  backdrop-filter: blur(18px);
+}
+
+.tab-bar button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tab-bar span {
+  min-height: 22px;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.tab-bar button.active {
+  color: var(--blue);
+}
+
+@media (max-width: 460px) {
+  body {
+    display: block;
+    background: var(--bg);
+  }
+
+  .phone-shell {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    border: 0;
+    box-shadow: none;
+  }
+}
