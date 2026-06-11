@@ -16,6 +16,8 @@ const debtCount = document.querySelector("#debt-count");
 const selectedMonthLabel = document.querySelector("#selected-month-label");
 const recordsListTitle = document.querySelector("#records-list-title");
 const offlineStatus = document.querySelector("#offline-status");
+const parsedCard = document.querySelector("#parsed-card");
+const parsedDate = document.querySelector("#parsed-date");
 
 document.querySelector("#expense-form").addEventListener("submit", addExpenseFromText);
 document.querySelector("#debt-form").addEventListener("submit", addDebtFromForm);
@@ -41,16 +43,8 @@ registerServiceWorker();
 
 function getDefaultState() {
   return {
-    expenses: [
-      createExpense("早餐", 85, "餐飲"),
-      createExpense("捷運", 35, "交通"),
-      createExpense("午餐", 120, "餐飲"),
-    ],
-    debts: [
-      createDebt("阿明", "咖啡", 280),
-      createDebt("小華", "晚餐代墊", 1200, offsetDate(-2)),
-      createDebt("佳佳", "電影票", 400, offsetDate(-7)),
-    ],
+    expenses: [],
+    debts: [],
   };
 }
 
@@ -79,22 +73,14 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function offsetDate(days) {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date;
-}
-
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return getDefaultState();
 
   try {
     const parsed = JSON.parse(raw);
-    if (!isValidState(parsed) || hasCorruptText(parsed)) {
-      return getDefaultState();
-    }
-    return parsed;
+    if (!isValidState(parsed)) return getDefaultState();
+    return cleanState(parsed);
   } catch {
     return getDefaultState();
   }
@@ -102,6 +88,35 @@ function loadState() {
 
 function isValidState(value) {
   return value && Array.isArray(value.expenses) && Array.isArray(value.debts);
+}
+
+function cleanState(value) {
+  return {
+    expenses: value.expenses.filter((expense) => isValidExpense(expense) && !isSeedExpense(expense)),
+    debts: value.debts.filter((debt) => isValidDebt(debt) && !isSeedDebt(debt)),
+  };
+}
+
+function isValidExpense(expense) {
+  return (
+    expense &&
+    typeof expense.id === "string" &&
+    typeof expense.title === "string" &&
+    Number.isFinite(Number(expense.amount)) &&
+    typeof expense.category === "string" &&
+    !hasCorruptText(expense)
+  );
+}
+
+function isValidDebt(debt) {
+  return (
+    debt &&
+    typeof debt.id === "string" &&
+    typeof debt.friend === "string" &&
+    typeof debt.item === "string" &&
+    Number.isFinite(Number(debt.amount)) &&
+    !hasCorruptText(debt)
+  );
 }
 
 function hasCorruptText(value) {
@@ -119,6 +134,16 @@ function hasCorruptText(value) {
     "\u5697",
   ];
   return corruptMarkers.some((marker) => text.includes(marker)) || /\?[\uE000-\uF8FF]/.test(text);
+}
+
+function isSeedExpense(expense) {
+  const seeds = new Set(["早餐:85", "咖啡:85", "捷運:35", "午餐:120"]);
+  return seeds.has(`${expense.title}:${Number(expense.amount)}`);
+}
+
+function isSeedDebt(debt) {
+  const seeds = new Set(["阿明:咖啡:280", "小華:晚餐代墊:1200", "佳佳:電影票:400"]);
+  return seeds.has(`${debt.friend}:${debt.item}:${Number(debt.amount)}`);
 }
 
 function saveState() {
@@ -248,7 +273,7 @@ function render() {
   const todayExpenses = state.expenses.filter((expense) => new Date(expense.date).toDateString() === today);
   const recentExpenses = state.expenses.slice(0, 4);
   const selectedExpenses = state.expenses.filter((expense) => getMonthKey(expense.date) === getSelectedMonthKey());
-  const debtSum = state.debts.reduce((sum, debt) => sum + debt.amount, 0);
+  const debtSum = state.debts.reduce((sum, debt) => sum + Number(debt.amount), 0);
 
   monthTotal.textContent = formatTwd(sumAmounts(thisMonthExpenses));
   todayTotal.textContent = formatTwd(sumAmounts(todayExpenses));
@@ -259,22 +284,23 @@ function render() {
   debtCount.textContent = `${state.debts.length} 筆未收`;
 
   renderLatestExpense(state.expenses[0]);
-  renderExpenseList(recentList, recentExpenses, "還沒有紀錄，輸入「午餐 120」開始。");
+  renderExpenseList(recentList, recentExpenses, "目前沒有紀錄。");
   renderExpenseList(recordsList, selectedExpenses, "這個月份還沒有支出。");
   renderDebtList();
 }
 
 function sumAmounts(items) {
-  return items.reduce((sum, item) => sum + item.amount, 0);
+  return items.reduce((sum, item) => sum + Number(item.amount), 0);
 }
 
 function renderLatestExpense(expense) {
+  parsedCard.classList.toggle("is-hidden", !expense);
   if (!expense) return;
 
-  document.querySelector("#latest-message span").textContent = `${expense.title} ${expense.amount}`;
   document.querySelector("#parsed-title").textContent = expense.title;
   document.querySelector("#parsed-amount").textContent = `-${formatTwd(expense.amount)}`;
   document.querySelector("#parsed-category").textContent = expense.category;
+  parsedDate.textContent = formatDateLabel(expense.date);
 }
 
 function renderExpenseList(target, expenses, emptyText) {

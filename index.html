@@ -14,7 +14,7 @@
   </head>
   <body>
     <main class="phone-shell" aria-label="KAI 記帳 App">
-      <section class="screen active" data-screen="home">
+      <section class="screen active home-screen" data-screen="home">
         <header class="top-bar">
           <p class="eyebrow">今天</p>
           <h1>記帳</h1>
@@ -31,33 +31,25 @@
           </div>
         </section>
 
-        <section class="chat-panel" aria-label="聊天式記帳">
-          <div class="message incoming">
-            <span>像聊天一樣輸入，例如「午餐 120」。</span>
+        <article class="parsed-card is-hidden" id="parsed-card" aria-live="polite">
+          <div>
+            <p>自動理解</p>
+            <h2 id="parsed-title"></h2>
           </div>
-          <div class="message outgoing" id="latest-message">
-            <span>早餐 85</span>
-          </div>
-          <article class="parsed-card" id="parsed-card">
+          <strong id="parsed-amount"></strong>
+          <dl>
             <div>
-              <p>自動理解</p>
-              <h2 id="parsed-title">早餐</h2>
+              <dt>分類</dt>
+              <dd id="parsed-category"></dd>
             </div>
-            <strong id="parsed-amount">-NT$ 85</strong>
-            <dl>
-              <div>
-                <dt>分類</dt>
-                <dd id="parsed-category">餐飲</dd>
-              </div>
-              <div>
-                <dt>日期</dt>
-                <dd>今天</dd>
-              </div>
-            </dl>
-          </article>
-        </section>
+            <div>
+              <dt>日期</dt>
+              <dd id="parsed-date">今天</dd>
+            </div>
+          </dl>
+        </article>
 
-        <section class="list-section">
+        <section class="list-section home-list-section">
           <div class="section-heading">
             <h2>最近紀錄</h2>
             <button type="button" data-target-tab="records">看全部</button>
@@ -85,7 +77,7 @@
           <p>這個月總支出</p>
           <strong id="records-total">NT$ 0</strong>
         </section>
-        <section class="list-section">
+        <section class="list-section fill-section">
           <h2 id="records-list-title">本月紀錄</h2>
           <ul class="transaction-list" id="records-list"></ul>
         </section>
@@ -119,7 +111,7 @@
           <button type="submit">新增欠款</button>
         </form>
 
-        <section class="list-section">
+        <section class="list-section fill-section">
           <div class="section-heading">
             <h2>欠款明細</h2>
             <button type="button" id="clear-debts">清空欠款</button>
@@ -153,7 +145,7 @@
         </ul>
 
         <section class="danger-zone">
-          <button type="button" id="reset-data">重設示範資料</button>
+          <button type="button" id="reset-data">清空本機資料</button>
         </section>
       </section>
 
