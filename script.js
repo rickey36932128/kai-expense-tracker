@@ -1,5 +1,5 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v8";
+const APP_VERSION = "v9";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 
 let state = loadState();
@@ -43,6 +43,7 @@ function bindElements() {
 }
 
 function bindEvents() {
+  document.addEventListener("dblclick", preventDoubleTapZoom, { passive: false });
   el.expenseForm.addEventListener("submit", addExpenseFromText);
   el.expenseInput.addEventListener("keydown", handleExpenseInputKeydown);
   el.debtForm.addEventListener("submit", addDebtFromForm);
@@ -59,6 +60,7 @@ function bindEvents() {
   el.debtList.addEventListener("click", handleDebtDelete);
 }
 
+function preventDoubleTapZoom(event) { event.preventDefault(); }
 function getDefaultState() { return { expenses: [], debts: [] }; }
 function createId() { return globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 function createExpense(title, amount, category = "其他", date = new Date()) { return { id: createId(), title, amount, category, date: new Date(date).toISOString() }; }
@@ -90,7 +92,17 @@ function formatTwd(amount) { return `NT$ ${Number(amount).toLocaleString("zh-Han
 function formatDateLabel(value) { const date = new Date(value); return date.toDateString() === new Date().toDateString() ? "今天" : `${date.getMonth() + 1} 月 ${date.getDate()} 日`; }
 function getMonthKey(value) { const date = new Date(value); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; }
 function inferCategory(title) { if (/早餐|午餐|晚餐|咖啡|飲料|便當|餐|麵|飯|宵夜/i.test(title)) return "飲食"; if (/捷運|公車|高鐵|uber|計程車|油錢|停車/i.test(title)) return "交通"; if (/網購|衣服|鞋|momo|pchome|蝦皮|購物/i.test(title)) return "購物"; if (/全聯|家樂福|超市|日用品|衛生紙/i.test(title)) return "生活"; return "其他"; }
-function parseExpense(text) { const match = text.trim().match(/^(.+?)\s*([0-9,]+)$/); if (!match) return null; const title = match[1].trim(); const amount = Number(match[2].replaceAll(",", "")); return title && Number.isFinite(amount) && amount > 0 ? createExpense(title, amount, inferCategory(title)) : null; }
+
+function parseExpense(text) {
+  const value = text.trim();
+  const textFirstMatch = value.match(/^(.+?)\s*([0-9,]+)$/);
+  const amountFirstMatch = value.match(/^([0-9,]+)\s*(.+?)$/);
+  const title = textFirstMatch ? textFirstMatch[1].trim() : amountFirstMatch?.[2].trim();
+  const amountText = textFirstMatch ? textFirstMatch[2] : amountFirstMatch?.[1];
+  if (!title || !amountText) return null;
+  const amount = Number(amountText.replaceAll(",", ""));
+  return Number.isFinite(amount) && amount > 0 ? createExpense(title, amount, inferCategory(title)) : null;
+}
 
 function addExpenseFromText(event) { event.preventDefault(); const expense = parseExpense(el.expenseInput.value); if (!expense) { el.expenseInput.focus(); el.expenseInput.classList.add("is-invalid"); window.setTimeout(() => el.expenseInput.classList.remove("is-invalid"), 500); return; } state.expenses.unshift(expense); saveState(); el.expenseInput.value = ""; el.expenseInput.focus(); render(); }
 function handleExpenseInputKeydown(event) { if (event.key !== "Enter" || event.isComposing) return; event.preventDefault(); if (typeof el.expenseForm.requestSubmit === "function") el.expenseForm.requestSubmit(); else el.expenseForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); }
@@ -132,39 +144,14 @@ function escapeHtml(value) { return String(value).replaceAll("&", "&amp;").repla
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) { el.offlineStatus.textContent = "此瀏覽器不支援"; return; }
   try {
-    const registration = await navigator.serviceWorker.register("./sw.js?v=8");
+    const registration = await navigator.serviceWorker.register("./sw.js?v=9");
     el.offlineStatus.textContent = "可離線使用";
     navigator.serviceWorker.addEventListener("controllerchange", () => { if (refreshingForUpdate) return; refreshingForUpdate = true; setUpdateStatus("更新完成，正在重新載入"); window.setTimeout(() => window.location.reload(), 450); });
-    registration.addEventListener("updatefound", () => {
-      const worker = registration.installing;
-      if (!worker) return;
-      setUpdateStatus("正在下載新版");
-      worker.addEventListener("statechange", () => {
-        if (worker.state === "installed" && navigator.serviceWorker.controller) { setUpdateStatus("新版已下載，正在安裝"); worker.postMessage({ type: "SKIP_WAITING" }); return; }
-        if (worker.state === "installed" || worker.state === "redundant") setUpdateStatus("已是最新版", 1600);
-      });
-    });
+    registration.addEventListener("updatefound", () => { const worker = registration.installing; if (!worker) return; setUpdateStatus("正在下載新版"); worker.addEventListener("statechange", () => { if (worker.state === "installed" && navigator.serviceWorker.controller) { setUpdateStatus("新版已下載，正在安裝"); worker.postMessage({ type: "SKIP_WAITING" }); return; } if (worker.state === "installed" || worker.state === "redundant") setUpdateStatus("已是最新版", 1600); }); });
     await checkForUpdates(false, registration);
     window.setInterval(() => checkForUpdates(false, registration), UPDATE_CHECK_INTERVAL);
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForUpdates(false, registration); });
   } catch { el.offlineStatus.textContent = "離線功能尚未啟用"; }
 }
-
-async function checkForUpdates(isManual = false, existingRegistration = null) {
-  if (!("serviceWorker" in navigator)) return;
-  const registration = existingRegistration || (await navigator.serviceWorker.getRegistration("./"));
-  if (!registration) return;
-  if (isManual) setUpdateStatus("正在檢查更新");
-  try {
-    await registration.update();
-    if (registration.waiting) { setUpdateStatus("新版已下載，正在安裝"); registration.waiting.postMessage({ type: "SKIP_WAITING" }); return; }
-    if (isManual) setUpdateStatus("已是最新版", 1600);
-  } catch { if (isManual) setUpdateStatus("目前無法檢查更新", 1800); }
-}
-
-function setUpdateStatus(message, hideAfterMs = 0) {
-  if (updateStatusTimer) { window.clearTimeout(updateStatusTimer); updateStatusTimer = 0; }
-  el.updateStatusText.textContent = message;
-  el.updateStatus.hidden = false;
-  if (hideAfterMs > 0) updateStatusTimer = window.setTimeout(() => { el.updateStatus.hidden = true; updateStatusTimer = 0; }, hideAfterMs);
-}
+async function checkForUpdates(isManual = false, existingRegistration = null) { if (!("serviceWorker" in navigator)) return; const registration = existingRegistration || (await navigator.serviceWorker.getRegistration("./")); if (!registration) return; if (isManual) setUpdateStatus("正在檢查更新"); try { await registration.update(); if (registration.waiting) { setUpdateStatus("新版已下載，正在安裝"); registration.waiting.postMessage({ type: "SKIP_WAITING" }); return; } if (isManual) setUpdateStatus("已是最新版", 1600); } catch { if (isManual) setUpdateStatus("目前無法檢查更新", 1800); } }
+function setUpdateStatus(message, hideAfterMs = 0) { if (updateStatusTimer) { window.clearTimeout(updateStatusTimer); updateStatusTimer = 0; } el.updateStatusText.textContent = message; el.updateStatus.hidden = false; if (hideAfterMs > 0) updateStatusTimer = window.setTimeout(() => { el.updateStatus.hidden = true; updateStatusTimer = 0; }, hideAfterMs); }
