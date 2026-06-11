@@ -16,7 +16,6 @@ const debtCount = document.querySelector("#debt-count");
 const selectedMonthLabel = document.querySelector("#selected-month-label");
 const recordsListTitle = document.querySelector("#records-list-title");
 const offlineStatus = document.querySelector("#offline-status");
-const parsedCard = document.querySelector("#parsed-card");
 const parsedDate = document.querySelector("#parsed-date");
 
 document.querySelector("#expense-form").addEventListener("submit", addExpenseFromText);
@@ -294,8 +293,13 @@ function sumAmounts(items) {
 }
 
 function renderLatestExpense(expense) {
-  parsedCard.classList.toggle("is-hidden", !expense);
-  if (!expense) return;
+  if (!expense) {
+    document.querySelector("#parsed-title").textContent = "尚未新增";
+    document.querySelector("#parsed-amount").textContent = "NT$ 0";
+    document.querySelector("#parsed-category").textContent = "-";
+    parsedDate.textContent = "-";
+    return;
+  }
 
   document.querySelector("#parsed-title").textContent = expense.title;
   document.querySelector("#parsed-amount").textContent = `-${formatTwd(expense.amount)}`;
@@ -375,7 +379,7 @@ async function registerServiceWorker() {
   }
 
   try {
-    await navigator.serviceWorker.register("./sw.js");
+    await navigator.serviceWorker.register("./sw.js?v=5");
     offlineStatus.textContent = "已可離線使用";
   } catch {
     offlineStatus.textContent = "離線功能尚未啟用";

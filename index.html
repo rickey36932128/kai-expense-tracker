@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-title" content="KAI 記帳" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>KAI 記帳</title>
-    <link rel="manifest" href="manifest.webmanifest?v=4" />
+    <link rel="manifest" href="manifest.webmanifest?v=5" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=4" />
+    <link rel="stylesheet" href="styles.css?v=5" />
   </head>
   <body>
     <main class="phone-shell" aria-label="KAI 記帳 App">
@@ -31,20 +31,20 @@
           </div>
         </section>
 
-        <article class="parsed-card is-hidden" id="parsed-card" aria-live="polite">
+        <article class="parsed-card" id="parsed-card" aria-live="polite">
           <div>
-            <p>自動理解</p>
-            <h2 id="parsed-title"></h2>
+            <p>最近新增</p>
+            <h2 id="parsed-title">尚未新增</h2>
           </div>
-          <strong id="parsed-amount"></strong>
+          <strong id="parsed-amount">NT$ 0</strong>
           <dl>
             <div>
               <dt>分類</dt>
-              <dd id="parsed-category"></dd>
+              <dd id="parsed-category">-</dd>
             </div>
             <div>
               <dt>日期</dt>
-              <dd id="parsed-date">今天</dd>
+              <dd id="parsed-date">-</dd>
             </div>
           </dl>
         </article>
@@ -58,7 +58,7 @@
         </section>
 
         <form class="composer" id="expense-form">
-          <input id="expense-input" aria-label="輸入記帳內容" placeholder="輸入支出" autocomplete="off" />
+          <input id="expense-input" aria-label="輸入記帳內容" placeholder="輸入一句話" autocomplete="off" />
           <button aria-label="送出">+</button>
         </form>
       </section>
@@ -168,6 +168,6 @@
         </button>
       </nav>
     </main>
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=5"></script>
   </body>
 </html>
