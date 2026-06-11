@@ -1,104 +1,94 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
+const APP_VERSION = "v7";
+const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 
-const elements = {};
 let state = loadState();
 let selectedMonth = new Date();
+let refreshingForUpdate = false;
+const el = {};
 
 document.addEventListener("DOMContentLoaded", init);
 
 function init() {
-  elements.tabButtons = document.querySelectorAll(".tab-bar button");
-  elements.screens = document.querySelectorAll(".screen");
-  elements.recentList = document.querySelector("#recent-list");
-  elements.recordsList = document.querySelector("#records-list");
-  elements.recordsTotal = document.querySelector("#records-total");
-  elements.monthTotal = document.querySelector("#month-total");
-  elements.todayTotal = document.querySelector("#today-total");
-  elements.debtList = document.querySelector("#debt-list");
-  elements.debtTotal = document.querySelector("#debt-total");
-  elements.debtCount = document.querySelector("#debt-count");
-  elements.selectedMonthLabel = document.querySelector("#selected-month-label");
-  elements.recordsListTitle = document.querySelector("#records-list-title");
-  elements.offlineStatus = document.querySelector("#offline-status");
-  elements.parsedDate = document.querySelector("#parsed-date");
-  elements.expenseForm = document.querySelector("#expense-form");
-  elements.expenseInput = document.querySelector("#expense-input");
-  elements.debtForm = document.querySelector("#debt-form");
-
-  elements.expenseForm.addEventListener("submit", addExpenseFromText);
-  elements.expenseInput.addEventListener("keydown", handleExpenseInputKeydown);
-  elements.debtForm.addEventListener("submit", addDebtFromForm);
-  document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
-  document.querySelector("#next-month").addEventListener("click", () => changeMonth(1));
-  document.querySelector("#clear-debts").addEventListener("click", clearDebts);
-  document.querySelector("#reset-data").addEventListener("click", resetData);
-
-  elements.tabButtons.forEach((button) => {
-    button.addEventListener("click", () => showTab(button.dataset.target));
-  });
-
-  document.querySelectorAll("[data-target-tab]").forEach((button) => {
-    button.addEventListener("click", () => showTab(button.dataset.targetTab));
-  });
-
-  elements.recentList.addEventListener("click", handleExpenseDelete);
-  elements.recordsList.addEventListener("click", handleExpenseDelete);
-  elements.debtList.addEventListener("click", handleDebtDelete);
-
-  saveState();
+  bindElements();
+  bindEvents();
+  cleanAndSaveState();
   render();
   registerServiceWorker();
 }
 
+function bindElements() {
+  el.tabButtons = document.querySelectorAll(".tab-bar button");
+  el.screens = document.querySelectorAll(".screen");
+  el.recentList = document.querySelector("#recent-list");
+  el.recordsList = document.querySelector("#records-list");
+  el.recordsTotal = document.querySelector("#records-total");
+  el.monthTotal = document.querySelector("#month-total");
+  el.todayTotal = document.querySelector("#today-total");
+  el.debtList = document.querySelector("#debt-list");
+  el.debtTotal = document.querySelector("#debt-total");
+  el.debtCount = document.querySelector("#debt-count");
+  el.selectedMonthLabel = document.querySelector("#selected-month-label");
+  el.recordsListTitle = document.querySelector("#records-list-title");
+  el.offlineStatus = document.querySelector("#offline-status");
+  el.parsedDate = document.querySelector("#parsed-date");
+  el.expenseForm = document.querySelector("#expense-form");
+  el.expenseInput = document.querySelector("#expense-input");
+  el.debtForm = document.querySelector("#debt-form");
+  el.updateStatus = document.querySelector("#update-status");
+  el.updateStatusText = document.querySelector("#update-status-text");
+  el.checkUpdate = document.querySelector("#check-update");
+  el.appVersion = document.querySelector("#app-version");
+}
+
+function bindEvents() {
+  el.expenseForm.addEventListener("submit", addExpenseFromText);
+  el.expenseInput.addEventListener("keydown", handleExpenseInputKeydown);
+  el.debtForm.addEventListener("submit", addDebtFromForm);
+  document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
+  document.querySelector("#next-month").addEventListener("click", () => changeMonth(1));
+  document.querySelector("#clear-debts").addEventListener("click", clearDebts);
+  document.querySelector("#reset-data").addEventListener("click", resetData);
+  el.checkUpdate.addEventListener("click", () => checkForUpdates(true));
+  el.appVersion.textContent = APP_VERSION;
+
+  el.tabButtons.forEach((button) => button.addEventListener("click", () => showTab(button.dataset.target)));
+  document.querySelectorAll("[data-target-tab]").forEach((button) => {
+    button.addEventListener("click", () => showTab(button.dataset.targetTab));
+  });
+
+  el.recentList.addEventListener("click", handleExpenseDelete);
+  el.recordsList.addEventListener("click", handleExpenseDelete);
+  el.debtList.addEventListener("click", handleDebtDelete);
+}
+
 function getDefaultState() {
-  return {
-    expenses: [],
-    debts: [],
-  };
-}
-
-function createExpense(title, amount, category = "其他", date = new Date()) {
-  return {
-    id: createId(),
-    title,
-    amount,
-    category,
-    date: new Date(date).toISOString(),
-  };
-}
-
-function createDebt(friend, item, amount, date = new Date()) {
-  return {
-    id: createId(),
-    friend,
-    item,
-    amount,
-    date: new Date(date).toISOString(),
-  };
+  return { expenses: [], debts: [] };
 }
 
 function createId() {
-  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
-    return globalThis.crypto.randomUUID();
-  }
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") return globalThis.crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function createExpense(title, amount, category = "其他", date = new Date()) {
+  return { id: createId(), title, amount, category, date: new Date(date).toISOString() };
+}
+
+function createDebt(friend, item, amount, date = new Date()) {
+  return { id: createId(), friend, item, amount, date: new Date(date).toISOString() };
 }
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return getDefaultState();
-
   try {
     const parsed = JSON.parse(raw);
-    if (!isValidState(parsed)) return getDefaultState();
+    if (!parsed || !Array.isArray(parsed.expenses) || !Array.isArray(parsed.debts)) return getDefaultState();
     return cleanState(parsed);
   } catch {
     return getDefaultState();
   }
-}
-
-function isValidState(value) {
-  return value && Array.isArray(value.expenses) && Array.isArray(value.debts);
 }
 
 function cleanState(value) {
@@ -108,41 +98,25 @@ function cleanState(value) {
   };
 }
 
+function cleanAndSaveState() {
+  state = cleanState(state);
+  saveState();
+}
+
 function isValidExpense(expense) {
-  return (
-    expense &&
-    typeof expense.id === "string" &&
-    typeof expense.title === "string" &&
-    Number.isFinite(Number(expense.amount)) &&
-    typeof expense.category === "string" &&
-    !hasCorruptText(expense)
-  );
+  return expense && typeof expense.title === "string" && Number.isFinite(Number(expense.amount)) && typeof expense.date === "string";
 }
 
 function isValidDebt(debt) {
-  return (
-    debt &&
-    typeof debt.id === "string" &&
-    typeof debt.friend === "string" &&
-    typeof debt.item === "string" &&
-    Number.isFinite(Number(debt.amount)) &&
-    !hasCorruptText(debt)
-  );
-}
-
-function hasCorruptText(value) {
-  const text = JSON.stringify(value);
-  return /[\uFFFD\u95AE\u875D\u7508\u649F\u929D\u761D\u876F\u769C\u5697]/.test(text);
+  return debt && typeof debt.friend === "string" && typeof debt.item === "string" && Number.isFinite(Number(debt.amount));
 }
 
 function isSeedExpense(expense) {
-  const seeds = new Set(["咖啡:85", "早餐:85", "捷運:35", "午餐:120"]);
-  return seeds.has(`${expense.title}:${Number(expense.amount)}`);
+  return new Set(["咖啡:85", "早餐:85", "捷運:35", "午餐:120"]).has(`${expense.title}:${Number(expense.amount)}`);
 }
 
 function isSeedDebt(debt) {
-  const seeds = new Set(["阿明:咖啡:280", "小美:電影票:1200", "家豪:宵夜:400"]);
-  return seeds.has(`${debt.friend}:${debt.item}:${Number(debt.amount)}`);
+  return new Set(["阿明:咖啡:280", "小美:電影票:1200", "家豪:宵夜:400"]).has(`${debt.friend}:${debt.item}:${Number(debt.amount)}`);
 }
 
 function saveState() {
@@ -156,19 +130,13 @@ function formatTwd(amount) {
 function formatDateLabel(value) {
   const date = new Date(value);
   const today = new Date();
-
   if (date.toDateString() === today.toDateString()) return "今天";
-
   return `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
 }
 
 function getMonthKey(value) {
   const date = new Date(value);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function getSelectedMonthKey() {
-  return getMonthKey(selectedMonth);
 }
 
 function inferCategory(title) {
@@ -182,42 +150,33 @@ function inferCategory(title) {
 function parseExpense(text) {
   const match = text.trim().match(/^(.+?)\s*([0-9,]+)$/);
   if (!match) return null;
-
   const title = match[1].trim();
   const amount = Number(match[2].replaceAll(",", ""));
-
   if (!title || !Number.isFinite(amount) || amount <= 0) return null;
-
   return createExpense(title, amount, inferCategory(title));
 }
 
 function addExpenseFromText(event) {
   event.preventDefault();
-  const expense = parseExpense(elements.expenseInput.value);
-
+  const expense = parseExpense(el.expenseInput.value);
   if (!expense) {
-    elements.expenseInput.focus();
-    elements.expenseInput.classList.add("is-invalid");
-    window.setTimeout(() => elements.expenseInput.classList.remove("is-invalid"), 500);
+    el.expenseInput.focus();
+    el.expenseInput.classList.add("is-invalid");
+    window.setTimeout(() => el.expenseInput.classList.remove("is-invalid"), 500);
     return;
   }
-
   state.expenses.unshift(expense);
   saveState();
-  elements.expenseInput.value = "";
-  elements.expenseInput.focus();
+  el.expenseInput.value = "";
+  el.expenseInput.focus();
   render();
 }
 
 function handleExpenseInputKeydown(event) {
   if (event.key !== "Enter" || event.isComposing) return;
-
   event.preventDefault();
-  if (typeof elements.expenseForm.requestSubmit === "function") {
-    elements.expenseForm.requestSubmit();
-  } else {
-    elements.expenseForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-  }
+  if (typeof el.expenseForm.requestSubmit === "function") el.expenseForm.requestSubmit();
+  else el.expenseForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 }
 
 function addDebtFromForm(event) {
@@ -226,9 +185,7 @@ function addDebtFromForm(event) {
   const friend = String(formData.get("friend") || "").trim();
   const item = String(formData.get("item") || "").trim();
   const amount = Number(String(formData.get("amount") || "").replaceAll(",", ""));
-
   if (!friend || !item || !Number.isFinite(amount) || amount <= 0) return;
-
   state.debts.unshift(createDebt(friend, item, amount));
   saveState();
   event.currentTarget.reset();
@@ -238,7 +195,6 @@ function addDebtFromForm(event) {
 function handleExpenseDelete(event) {
   const button = event.target.closest("[data-delete-expense]");
   if (!button) return;
-
   state.expenses = state.expenses.filter((expense) => expense.id !== button.dataset.deleteExpense);
   saveState();
   render();
@@ -247,7 +203,6 @@ function handleExpenseDelete(event) {
 function handleDebtDelete(event) {
   const button = event.target.closest("[data-delete-debt]");
   if (!button) return;
-
   state.debts = state.debts.filter((debt) => debt.id !== button.dataset.deleteDebt);
   saveState();
   render();
@@ -272,32 +227,30 @@ function changeMonth(delta) {
 }
 
 function showTab(target) {
-  elements.tabButtons.forEach((item) => item.classList.toggle("active", item.dataset.target === target));
-  elements.screens.forEach((screen) => {
-    screen.classList.toggle("active", screen.dataset.screen === target);
-  });
+  el.tabButtons.forEach((item) => item.classList.toggle("active", item.dataset.target === target));
+  el.screens.forEach((screen) => screen.classList.toggle("active", screen.dataset.screen === target));
 }
 
 function render() {
   const nowKey = getMonthKey(new Date());
   const today = new Date().toDateString();
+  const monthKey = getMonthKey(selectedMonth);
   const thisMonthExpenses = state.expenses.filter((expense) => getMonthKey(expense.date) === nowKey);
   const todayExpenses = state.expenses.filter((expense) => new Date(expense.date).toDateString() === today);
-  const recentExpenses = state.expenses.slice(0, 4);
-  const selectedExpenses = state.expenses.filter((expense) => getMonthKey(expense.date) === getSelectedMonthKey());
+  const selectedExpenses = state.expenses.filter((expense) => getMonthKey(expense.date) === monthKey);
   const debtSum = state.debts.reduce((sum, debt) => sum + Number(debt.amount), 0);
 
-  elements.monthTotal.textContent = formatTwd(sumAmounts(thisMonthExpenses));
-  elements.todayTotal.textContent = formatTwd(sumAmounts(todayExpenses));
-  elements.recordsTotal.textContent = formatTwd(sumAmounts(selectedExpenses));
-  elements.selectedMonthLabel.textContent = `${selectedMonth.getFullYear()} 年 ${selectedMonth.getMonth() + 1} 月`;
-  elements.recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月紀錄`;
-  elements.debtTotal.textContent = formatTwd(debtSum);
-  elements.debtCount.textContent = `${state.debts.length} 筆`;
+  el.monthTotal.textContent = formatTwd(sumAmounts(thisMonthExpenses));
+  el.todayTotal.textContent = formatTwd(sumAmounts(todayExpenses));
+  el.recordsTotal.textContent = formatTwd(sumAmounts(selectedExpenses));
+  el.selectedMonthLabel.textContent = `${selectedMonth.getFullYear()} 年 ${selectedMonth.getMonth() + 1} 月`;
+  el.recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月紀錄`;
+  el.debtTotal.textContent = formatTwd(debtSum);
+  el.debtCount.textContent = `${state.debts.length} 筆`;
 
   renderLatestExpense(state.expenses[0]);
-  renderExpenseList(elements.recentList, recentExpenses, "目前沒有紀錄");
-  renderExpenseList(elements.recordsList, selectedExpenses, "這個月還沒有支出");
+  renderExpenseList(el.recentList, state.expenses.slice(0, 4), "目前沒有紀錄");
+  renderExpenseList(el.recordsList, selectedExpenses, "這個月還沒有支出");
   renderDebtList();
 }
 
@@ -306,18 +259,10 @@ function sumAmounts(items) {
 }
 
 function renderLatestExpense(expense) {
-  if (!expense) {
-    document.querySelector("#parsed-title").textContent = "尚未新增";
-    document.querySelector("#parsed-amount").textContent = "NT$ 0";
-    document.querySelector("#parsed-category").textContent = "-";
-    elements.parsedDate.textContent = "-";
-    return;
-  }
-
-  document.querySelector("#parsed-title").textContent = expense.title;
-  document.querySelector("#parsed-amount").textContent = `-${formatTwd(expense.amount)}`;
-  document.querySelector("#parsed-category").textContent = expense.category;
-  elements.parsedDate.textContent = formatDateLabel(expense.date);
+  document.querySelector("#parsed-title").textContent = expense ? expense.title : "尚未新增";
+  document.querySelector("#parsed-amount").textContent = expense ? `-${formatTwd(expense.amount)}` : "NT$ 0";
+  document.querySelector("#parsed-category").textContent = expense ? expense.category : "-";
+  el.parsedDate.textContent = expense ? formatDateLabel(expense.date) : "-";
 }
 
 function renderExpenseList(target, expenses, emptyText) {
@@ -325,77 +270,95 @@ function renderExpenseList(target, expenses, emptyText) {
     target.innerHTML = `<li class="empty-state">${emptyText}</li>`;
     return;
   }
-
-  target.innerHTML = expenses
-    .map(
-      (expense) => `
-        <li>
-          <span class="category-dot ${getCategoryClass(expense.category)}"></span>
-          <div>
-            <strong>${escapeHtml(expense.title)}</strong>
-            <p>${escapeHtml(expense.category)} · ${formatDateLabel(expense.date)}</p>
-          </div>
-          <b>-${formatTwd(expense.amount)}</b>
-          <button class="delete-button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">x</button>
-        </li>
-      `
-    )
-    .join("");
+  target.innerHTML = expenses.map((expense) => `
+    <li>
+      <span class="category-dot ${getCategoryClass(expense.category)}"></span>
+      <div><strong>${escapeHtml(expense.title)}</strong><p>${escapeHtml(expense.category)} · ${formatDateLabel(expense.date)}</p></div>
+      <b>-${formatTwd(expense.amount)}</b>
+      <button class="delete-button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">x</button>
+    </li>`).join("");
 }
 
 function renderDebtList() {
   if (!state.debts.length) {
-    elements.debtList.innerHTML = `<li class="empty-state">目前沒有朋友欠款</li>`;
+    el.debtList.innerHTML = `<li class="empty-state">目前沒有朋友欠款</li>`;
     return;
   }
-
-  elements.debtList.innerHTML = state.debts
-    .map(
-      (debt) => `
-        <li>
-          <span class="avatar">${escapeHtml(debt.friend.slice(-1))}</span>
-          <div>
-            <strong>${escapeHtml(debt.friend)}</strong>
-            <p>${escapeHtml(debt.item)} · ${formatDateLabel(debt.date)}</p>
-          </div>
-          <b>${formatTwd(debt.amount)}</b>
-          <button class="delete-button" data-delete-debt="${debt.id}" aria-label="刪除 ${escapeHtml(debt.friend)}">x</button>
-        </li>
-      `
-    )
-    .join("");
+  el.debtList.innerHTML = state.debts.map((debt) => `
+    <li>
+      <span class="avatar">${escapeHtml(debt.friend.slice(-1))}</span>
+      <div><strong>${escapeHtml(debt.friend)}</strong><p>${escapeHtml(debt.item)} · ${formatDateLabel(debt.date)}</p></div>
+      <b>${formatTwd(debt.amount)}</b>
+      <button class="delete-button" data-delete-debt="${debt.id}" aria-label="刪除 ${escapeHtml(debt.friend)}">x</button>
+    </li>`).join("");
 }
 
 function getCategoryClass(category) {
-  const map = {
-    飲食: "food",
-    交通: "transit",
-    購物: "shopping",
-    生活: "grocery",
-  };
-  return map[category] || "other";
+  return { 飲食: "food", 交通: "transit", 購物: "shopping", 生活: "grocery" }[category] || "other";
 }
 
 function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
-    elements.offlineStatus.textContent = "此瀏覽器不支援";
+    el.offlineStatus.textContent = "此瀏覽器不支援";
     return;
   }
-
   try {
-    const registration = await navigator.serviceWorker.register("./sw.js?v=6");
-    await registration.update();
-    elements.offlineStatus.textContent = "可離線使用";
+    const registration = await navigator.serviceWorker.register("./sw.js?v=7");
+    el.offlineStatus.textContent = "可離線使用";
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshingForUpdate) return;
+      refreshingForUpdate = true;
+      setUpdateStatus("更新完成，正在重新載入");
+      window.setTimeout(() => window.location.reload(), 450);
+    });
+
+    registration.addEventListener("updatefound", () => {
+      const worker = registration.installing;
+      if (!worker) return;
+      setUpdateStatus("正在下載新版");
+      worker.addEventListener("statechange", () => {
+        if (worker.state === "installed" && navigator.serviceWorker.controller) {
+          setUpdateStatus("新版已下載，正在安裝");
+          worker.postMessage({ type: "SKIP_WAITING" });
+        }
+      });
+    });
+
+    await checkForUpdates(false, registration);
+    window.setInterval(() => checkForUpdates(false, registration), UPDATE_CHECK_INTERVAL);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") checkForUpdates(false, registration);
+    });
   } catch {
-    elements.offlineStatus.textContent = "離線功能尚未啟用";
+    el.offlineStatus.textContent = "離線功能尚未啟用";
   }
+}
+
+async function checkForUpdates(isManual = false, existingRegistration = null) {
+  if (!("serviceWorker" in navigator)) return;
+  const registration = existingRegistration || (await navigator.serviceWorker.getRegistration("./"));
+  if (!registration) return;
+  if (isManual) setUpdateStatus("正在檢查更新");
+  try {
+    await registration.update();
+    if (registration.waiting) {
+      setUpdateStatus("新版已下載，正在安裝");
+      registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      return;
+    }
+    if (isManual) setUpdateStatus("已是最新版", 1600);
+  } catch {
+    if (isManual) setUpdateStatus("目前無法檢查更新", 1800);
+  }
+}
+
+function setUpdateStatus(message, hideAfterMs = 0) {
+  el.updateStatusText.textContent = message;
+  el.updateStatus.hidden = false;
+  if (hideAfterMs > 0) window.setTimeout(() => { el.updateStatus.hidden = true; }, hideAfterMs);
 }
