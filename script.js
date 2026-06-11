@@ -1,10 +1,11 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v7";
+const APP_VERSION = "v8";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 
 let state = loadState();
 let selectedMonth = new Date();
 let refreshingForUpdate = false;
+let updateStatusTimer = 0;
 const el = {};
 
 document.addEventListener("DOMContentLoaded", init);
@@ -51,33 +52,17 @@ function bindEvents() {
   document.querySelector("#reset-data").addEventListener("click", resetData);
   el.checkUpdate.addEventListener("click", () => checkForUpdates(true));
   el.appVersion.textContent = APP_VERSION;
-
   el.tabButtons.forEach((button) => button.addEventListener("click", () => showTab(button.dataset.target)));
-  document.querySelectorAll("[data-target-tab]").forEach((button) => {
-    button.addEventListener("click", () => showTab(button.dataset.targetTab));
-  });
-
+  document.querySelectorAll("[data-target-tab]").forEach((button) => button.addEventListener("click", () => showTab(button.dataset.targetTab)));
   el.recentList.addEventListener("click", handleExpenseDelete);
   el.recordsList.addEventListener("click", handleExpenseDelete);
   el.debtList.addEventListener("click", handleDebtDelete);
 }
 
-function getDefaultState() {
-  return { expenses: [], debts: [] };
-}
-
-function createId() {
-  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") return globalThis.crypto.randomUUID();
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function createExpense(title, amount, category = "其他", date = new Date()) {
-  return { id: createId(), title, amount, category, date: new Date(date).toISOString() };
-}
-
-function createDebt(friend, item, amount, date = new Date()) {
-  return { id: createId(), friend, item, amount, date: new Date(date).toISOString() };
-}
+function getDefaultState() { return { expenses: [], debts: [] }; }
+function createId() { return globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+function createExpense(title, amount, category = "其他", date = new Date()) { return { id: createId(), title, amount, category, date: new Date(date).toISOString() }; }
+function createDebt(friend, item, amount, date = new Date()) { return { id: createId(), friend, item, amount, date: new Date(date).toISOString() }; }
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -86,9 +71,7 @@ function loadState() {
     const parsed = JSON.parse(raw);
     if (!parsed || !Array.isArray(parsed.expenses) || !Array.isArray(parsed.debts)) return getDefaultState();
     return cleanState(parsed);
-  } catch {
-    return getDefaultState();
-  }
+  } catch { return getDefaultState(); }
 }
 
 function cleanState(value) {
@@ -97,139 +80,27 @@ function cleanState(value) {
     debts: value.debts.filter((debt) => isValidDebt(debt) && !isSeedDebt(debt)),
   };
 }
+function cleanAndSaveState() { state = cleanState(state); saveState(); }
+function isValidExpense(expense) { return expense && typeof expense.title === "string" && Number.isFinite(Number(expense.amount)) && typeof expense.date === "string"; }
+function isValidDebt(debt) { return debt && typeof debt.friend === "string" && typeof debt.item === "string" && Number.isFinite(Number(debt.amount)); }
+function isSeedExpense(expense) { return new Set(["咖啡:85", "早餐:85", "捷運:35", "午餐:120"]).has(`${expense.title}:${Number(expense.amount)}`); }
+function isSeedDebt(debt) { return new Set(["阿明:咖啡:280", "小美:電影票:1200", "家豪:宵夜:400"]).has(`${debt.friend}:${debt.item}:${Number(debt.amount)}`); }
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function formatTwd(amount) { return `NT$ ${Number(amount).toLocaleString("zh-Hant-TW")}`; }
+function formatDateLabel(value) { const date = new Date(value); return date.toDateString() === new Date().toDateString() ? "今天" : `${date.getMonth() + 1} 月 ${date.getDate()} 日`; }
+function getMonthKey(value) { const date = new Date(value); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; }
+function inferCategory(title) { if (/早餐|午餐|晚餐|咖啡|飲料|便當|餐|麵|飯|宵夜/i.test(title)) return "飲食"; if (/捷運|公車|高鐵|uber|計程車|油錢|停車/i.test(title)) return "交通"; if (/網購|衣服|鞋|momo|pchome|蝦皮|購物/i.test(title)) return "購物"; if (/全聯|家樂福|超市|日用品|衛生紙/i.test(title)) return "生活"; return "其他"; }
+function parseExpense(text) { const match = text.trim().match(/^(.+?)\s*([0-9,]+)$/); if (!match) return null; const title = match[1].trim(); const amount = Number(match[2].replaceAll(",", "")); return title && Number.isFinite(amount) && amount > 0 ? createExpense(title, amount, inferCategory(title)) : null; }
 
-function cleanAndSaveState() {
-  state = cleanState(state);
-  saveState();
-}
-
-function isValidExpense(expense) {
-  return expense && typeof expense.title === "string" && Number.isFinite(Number(expense.amount)) && typeof expense.date === "string";
-}
-
-function isValidDebt(debt) {
-  return debt && typeof debt.friend === "string" && typeof debt.item === "string" && Number.isFinite(Number(debt.amount));
-}
-
-function isSeedExpense(expense) {
-  return new Set(["咖啡:85", "早餐:85", "捷運:35", "午餐:120"]).has(`${expense.title}:${Number(expense.amount)}`);
-}
-
-function isSeedDebt(debt) {
-  return new Set(["阿明:咖啡:280", "小美:電影票:1200", "家豪:宵夜:400"]).has(`${debt.friend}:${debt.item}:${Number(debt.amount)}`);
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-function formatTwd(amount) {
-  return `NT$ ${Number(amount).toLocaleString("zh-Hant-TW")}`;
-}
-
-function formatDateLabel(value) {
-  const date = new Date(value);
-  const today = new Date();
-  if (date.toDateString() === today.toDateString()) return "今天";
-  return `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
-}
-
-function getMonthKey(value) {
-  const date = new Date(value);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function inferCategory(title) {
-  if (/早餐|午餐|晚餐|咖啡|飲料|便當|餐|麵|飯|宵夜/i.test(title)) return "飲食";
-  if (/捷運|公車|高鐵|uber|計程車|油錢|停車/i.test(title)) return "交通";
-  if (/網購|衣服|鞋|momo|pchome|蝦皮|購物/i.test(title)) return "購物";
-  if (/全聯|家樂福|超市|日用品|衛生紙/i.test(title)) return "生活";
-  return "其他";
-}
-
-function parseExpense(text) {
-  const match = text.trim().match(/^(.+?)\s*([0-9,]+)$/);
-  if (!match) return null;
-  const title = match[1].trim();
-  const amount = Number(match[2].replaceAll(",", ""));
-  if (!title || !Number.isFinite(amount) || amount <= 0) return null;
-  return createExpense(title, amount, inferCategory(title));
-}
-
-function addExpenseFromText(event) {
-  event.preventDefault();
-  const expense = parseExpense(el.expenseInput.value);
-  if (!expense) {
-    el.expenseInput.focus();
-    el.expenseInput.classList.add("is-invalid");
-    window.setTimeout(() => el.expenseInput.classList.remove("is-invalid"), 500);
-    return;
-  }
-  state.expenses.unshift(expense);
-  saveState();
-  el.expenseInput.value = "";
-  el.expenseInput.focus();
-  render();
-}
-
-function handleExpenseInputKeydown(event) {
-  if (event.key !== "Enter" || event.isComposing) return;
-  event.preventDefault();
-  if (typeof el.expenseForm.requestSubmit === "function") el.expenseForm.requestSubmit();
-  else el.expenseForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-}
-
-function addDebtFromForm(event) {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const friend = String(formData.get("friend") || "").trim();
-  const item = String(formData.get("item") || "").trim();
-  const amount = Number(String(formData.get("amount") || "").replaceAll(",", ""));
-  if (!friend || !item || !Number.isFinite(amount) || amount <= 0) return;
-  state.debts.unshift(createDebt(friend, item, amount));
-  saveState();
-  event.currentTarget.reset();
-  render();
-}
-
-function handleExpenseDelete(event) {
-  const button = event.target.closest("[data-delete-expense]");
-  if (!button) return;
-  state.expenses = state.expenses.filter((expense) => expense.id !== button.dataset.deleteExpense);
-  saveState();
-  render();
-}
-
-function handleDebtDelete(event) {
-  const button = event.target.closest("[data-delete-debt]");
-  if (!button) return;
-  state.debts = state.debts.filter((debt) => debt.id !== button.dataset.deleteDebt);
-  saveState();
-  render();
-}
-
-function clearDebts() {
-  state.debts = [];
-  saveState();
-  render();
-}
-
-function resetData() {
-  state = getDefaultState();
-  selectedMonth = new Date();
-  saveState();
-  render();
-}
-
-function changeMonth(delta) {
-  selectedMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + delta, 1);
-  render();
-}
-
-function showTab(target) {
-  el.tabButtons.forEach((item) => item.classList.toggle("active", item.dataset.target === target));
-  el.screens.forEach((screen) => screen.classList.toggle("active", screen.dataset.screen === target));
-}
+function addExpenseFromText(event) { event.preventDefault(); const expense = parseExpense(el.expenseInput.value); if (!expense) { el.expenseInput.focus(); el.expenseInput.classList.add("is-invalid"); window.setTimeout(() => el.expenseInput.classList.remove("is-invalid"), 500); return; } state.expenses.unshift(expense); saveState(); el.expenseInput.value = ""; el.expenseInput.focus(); render(); }
+function handleExpenseInputKeydown(event) { if (event.key !== "Enter" || event.isComposing) return; event.preventDefault(); if (typeof el.expenseForm.requestSubmit === "function") el.expenseForm.requestSubmit(); else el.expenseForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); }
+function addDebtFromForm(event) { event.preventDefault(); const formData = new FormData(event.currentTarget); const friend = String(formData.get("friend") || "").trim(); const item = String(formData.get("item") || "").trim(); const amount = Number(String(formData.get("amount") || "").replaceAll(",", "")); if (!friend || !item || !Number.isFinite(amount) || amount <= 0) return; state.debts.unshift(createDebt(friend, item, amount)); saveState(); event.currentTarget.reset(); render(); }
+function handleExpenseDelete(event) { const button = event.target.closest("[data-delete-expense]"); if (!button) return; state.expenses = state.expenses.filter((expense) => expense.id !== button.dataset.deleteExpense); saveState(); render(); }
+function handleDebtDelete(event) { const button = event.target.closest("[data-delete-debt]"); if (!button) return; state.debts = state.debts.filter((debt) => debt.id !== button.dataset.deleteDebt); saveState(); render(); }
+function clearDebts() { state.debts = []; saveState(); render(); }
+function resetData() { state = getDefaultState(); selectedMonth = new Date(); saveState(); render(); }
+function changeMonth(delta) { selectedMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + delta, 1); render(); }
+function showTab(target) { el.tabButtons.forEach((item) => item.classList.toggle("active", item.dataset.target === target)); el.screens.forEach((screen) => screen.classList.toggle("active", screen.dataset.screen === target)); }
 
 function render() {
   const nowKey = getMonthKey(new Date());
@@ -239,7 +110,6 @@ function render() {
   const todayExpenses = state.expenses.filter((expense) => new Date(expense.date).toDateString() === today);
   const selectedExpenses = state.expenses.filter((expense) => getMonthKey(expense.date) === monthKey);
   const debtSum = state.debts.reduce((sum, debt) => sum + Number(debt.amount), 0);
-
   el.monthTotal.textContent = formatTwd(sumAmounts(thisMonthExpenses));
   el.todayTotal.textContent = formatTwd(sumAmounts(todayExpenses));
   el.recordsTotal.textContent = formatTwd(sumAmounts(selectedExpenses));
@@ -247,96 +117,37 @@ function render() {
   el.recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月紀錄`;
   el.debtTotal.textContent = formatTwd(debtSum);
   el.debtCount.textContent = `${state.debts.length} 筆`;
-
   renderLatestExpense(state.expenses[0]);
   renderExpenseList(el.recentList, state.expenses.slice(0, 4), "目前沒有紀錄");
   renderExpenseList(el.recordsList, selectedExpenses, "這個月還沒有支出");
   renderDebtList();
 }
-
-function sumAmounts(items) {
-  return items.reduce((sum, item) => sum + Number(item.amount), 0);
-}
-
-function renderLatestExpense(expense) {
-  document.querySelector("#parsed-title").textContent = expense ? expense.title : "尚未新增";
-  document.querySelector("#parsed-amount").textContent = expense ? `-${formatTwd(expense.amount)}` : "NT$ 0";
-  document.querySelector("#parsed-category").textContent = expense ? expense.category : "-";
-  el.parsedDate.textContent = expense ? formatDateLabel(expense.date) : "-";
-}
-
-function renderExpenseList(target, expenses, emptyText) {
-  if (!expenses.length) {
-    target.innerHTML = `<li class="empty-state">${emptyText}</li>`;
-    return;
-  }
-  target.innerHTML = expenses.map((expense) => `
-    <li>
-      <span class="category-dot ${getCategoryClass(expense.category)}"></span>
-      <div><strong>${escapeHtml(expense.title)}</strong><p>${escapeHtml(expense.category)} · ${formatDateLabel(expense.date)}</p></div>
-      <b>-${formatTwd(expense.amount)}</b>
-      <button class="delete-button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">x</button>
-    </li>`).join("");
-}
-
-function renderDebtList() {
-  if (!state.debts.length) {
-    el.debtList.innerHTML = `<li class="empty-state">目前沒有朋友欠款</li>`;
-    return;
-  }
-  el.debtList.innerHTML = state.debts.map((debt) => `
-    <li>
-      <span class="avatar">${escapeHtml(debt.friend.slice(-1))}</span>
-      <div><strong>${escapeHtml(debt.friend)}</strong><p>${escapeHtml(debt.item)} · ${formatDateLabel(debt.date)}</p></div>
-      <b>${formatTwd(debt.amount)}</b>
-      <button class="delete-button" data-delete-debt="${debt.id}" aria-label="刪除 ${escapeHtml(debt.friend)}">x</button>
-    </li>`).join("");
-}
-
-function getCategoryClass(category) {
-  return { 飲食: "food", 交通: "transit", 購物: "shopping", 生活: "grocery" }[category] || "other";
-}
-
-function escapeHtml(value) {
-  return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-}
+function sumAmounts(items) { return items.reduce((sum, item) => sum + Number(item.amount), 0); }
+function renderLatestExpense(expense) { document.querySelector("#parsed-title").textContent = expense ? expense.title : "尚未新增"; document.querySelector("#parsed-amount").textContent = expense ? `-${formatTwd(expense.amount)}` : "NT$ 0"; document.querySelector("#parsed-category").textContent = expense ? expense.category : "-"; el.parsedDate.textContent = expense ? formatDateLabel(expense.date) : "-"; }
+function renderExpenseList(target, expenses, emptyText) { if (!expenses.length) { target.innerHTML = `<li class="empty-state">${emptyText}</li>`; return; } target.innerHTML = expenses.map((expense) => `<li><span class="category-dot ${getCategoryClass(expense.category)}"></span><div><strong>${escapeHtml(expense.title)}</strong><p>${escapeHtml(expense.category)} · ${formatDateLabel(expense.date)}</p></div><b>-${formatTwd(expense.amount)}</b><button class="delete-button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">x</button></li>`).join(""); }
+function renderDebtList() { if (!state.debts.length) { el.debtList.innerHTML = `<li class="empty-state">目前沒有朋友欠款</li>`; return; } el.debtList.innerHTML = state.debts.map((debt) => `<li><span class="avatar">${escapeHtml(debt.friend.slice(-1))}</span><div><strong>${escapeHtml(debt.friend)}</strong><p>${escapeHtml(debt.item)} · ${formatDateLabel(debt.date)}</p></div><b>${formatTwd(debt.amount)}</b><button class="delete-button" data-delete-debt="${debt.id}" aria-label="刪除 ${escapeHtml(debt.friend)}">x</button></li>`).join(""); }
+function getCategoryClass(category) { return { 飲食: "food", 交通: "transit", 購物: "shopping", 生活: "grocery" }[category] || "other"; }
+function escapeHtml(value) { return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
 
 async function registerServiceWorker() {
-  if (!("serviceWorker" in navigator)) {
-    el.offlineStatus.textContent = "此瀏覽器不支援";
-    return;
-  }
+  if (!("serviceWorker" in navigator)) { el.offlineStatus.textContent = "此瀏覽器不支援"; return; }
   try {
-    const registration = await navigator.serviceWorker.register("./sw.js?v=7");
+    const registration = await navigator.serviceWorker.register("./sw.js?v=8");
     el.offlineStatus.textContent = "可離線使用";
-
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshingForUpdate) return;
-      refreshingForUpdate = true;
-      setUpdateStatus("更新完成，正在重新載入");
-      window.setTimeout(() => window.location.reload(), 450);
-    });
-
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (refreshingForUpdate) return; refreshingForUpdate = true; setUpdateStatus("更新完成，正在重新載入"); window.setTimeout(() => window.location.reload(), 450); });
     registration.addEventListener("updatefound", () => {
       const worker = registration.installing;
       if (!worker) return;
       setUpdateStatus("正在下載新版");
       worker.addEventListener("statechange", () => {
-        if (worker.state === "installed" && navigator.serviceWorker.controller) {
-          setUpdateStatus("新版已下載，正在安裝");
-          worker.postMessage({ type: "SKIP_WAITING" });
-        }
+        if (worker.state === "installed" && navigator.serviceWorker.controller) { setUpdateStatus("新版已下載，正在安裝"); worker.postMessage({ type: "SKIP_WAITING" }); return; }
+        if (worker.state === "installed" || worker.state === "redundant") setUpdateStatus("已是最新版", 1600);
       });
     });
-
     await checkForUpdates(false, registration);
     window.setInterval(() => checkForUpdates(false, registration), UPDATE_CHECK_INTERVAL);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") checkForUpdates(false, registration);
-    });
-  } catch {
-    el.offlineStatus.textContent = "離線功能尚未啟用";
-  }
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForUpdates(false, registration); });
+  } catch { el.offlineStatus.textContent = "離線功能尚未啟用"; }
 }
 
 async function checkForUpdates(isManual = false, existingRegistration = null) {
@@ -346,19 +157,14 @@ async function checkForUpdates(isManual = false, existingRegistration = null) {
   if (isManual) setUpdateStatus("正在檢查更新");
   try {
     await registration.update();
-    if (registration.waiting) {
-      setUpdateStatus("新版已下載，正在安裝");
-      registration.waiting.postMessage({ type: "SKIP_WAITING" });
-      return;
-    }
+    if (registration.waiting) { setUpdateStatus("新版已下載，正在安裝"); registration.waiting.postMessage({ type: "SKIP_WAITING" }); return; }
     if (isManual) setUpdateStatus("已是最新版", 1600);
-  } catch {
-    if (isManual) setUpdateStatus("目前無法檢查更新", 1800);
-  }
+  } catch { if (isManual) setUpdateStatus("目前無法檢查更新", 1800); }
 }
 
 function setUpdateStatus(message, hideAfterMs = 0) {
+  if (updateStatusTimer) { window.clearTimeout(updateStatusTimer); updateStatusTimer = 0; }
   el.updateStatusText.textContent = message;
   el.updateStatus.hidden = false;
-  if (hideAfterMs > 0) window.setTimeout(() => { el.updateStatus.hidden = true; }, hideAfterMs);
+  if (hideAfterMs > 0) updateStatusTimer = window.setTimeout(() => { el.updateStatus.hidden = true; updateStatusTimer = 0; }, hideAfterMs);
 }
