@@ -1,8 +1,8 @@
 {
   "name": "KAI 記帳",
   "short_name": "KAI 記帳",
-  "description": "個人記帳與朋友欠款紀錄",
-  "start_url": "./index.html?v=5",
+  "description": "像聊天一樣輸入的個人記帳 PWA",
+  "start_url": "./index.html?v=6",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f2f2f7",
@@ -12,6 +12,12 @@
     {
       "src": "icons/icon-192.png",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
