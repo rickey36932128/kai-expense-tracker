@@ -1,5 +1,5 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v12";
+const APP_VERSION = "v13";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -197,8 +197,7 @@ function setCurrency(currency) {
 
 function getCurrencyLabel(currency = getCurrency()) {
   return currency === "JPY" ? "¥" : "NT$";
-}
-
+}\n
 function formatMoney(amount, currency = getCurrency()) {
   return `${getCurrencyLabel(currency)} ${Number(amount).toLocaleString(currency === "JPY" ? "ja-JP" : "zh-Hant-TW")}`;
 }
@@ -451,7 +450,7 @@ async function registerServiceWorker() {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("./sw.js?v=12");
+    const registration = await navigator.serviceWorker.register("./sw.js?v=13");
     elements.offlineStatus.textContent = "可離線使用";
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {
