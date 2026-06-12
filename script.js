@@ -197,7 +197,8 @@ function setCurrency(currency) {
 
 function getCurrencyLabel(currency = getCurrency()) {
   return currency === "JPY" ? "¥" : "NT$";
-}\n
+}
+
 function formatMoney(amount, currency = getCurrency()) {
   return `${getCurrencyLabel(currency)} ${Number(amount).toLocaleString(currency === "JPY" ? "ja-JP" : "zh-Hant-TW")}`;
 }
