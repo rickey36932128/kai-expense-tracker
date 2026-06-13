@@ -508,6 +508,9 @@ dd {
 
 [data-screen="records"] {
   overflow-y: auto;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  scroll-padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
 }
 
 .analysis-balance-card {
@@ -673,11 +676,15 @@ dd {
   margin-top: 0;
 }
 
+.analysis-list-section h2 {
+  display: none;
+}
+
 .category-summary-list {
   display: grid;
   gap: 10px;
   padding: 0;
-  margin: 8px 0 0;
+  margin: 0;
   list-style: none;
 }
 
@@ -748,12 +755,12 @@ dd {
   font-size: 20px;
   font-weight: 900;
   line-height: 1;
-  transform: translateY(-3px);
+  transform: none;
   transition: transform 0.18s ease;
 }
 
 .category-summary-item details[open] .summary-chevron {
-  transform: translateY(-3px) rotate(180deg);
+  transform: none;
 }
 
 .summary-chevron-placeholder {
@@ -769,16 +776,51 @@ dd {
 }
 
 .category-summary-item details li {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(48px, auto) 22px;
+  align-items: center;
   gap: 12px;
   color: var(--muted);
   font-size: 14px;
 }
 
+.category-detail-row {
+  min-height: 34px;
+  cursor: pointer;
+}
+
+.category-detail-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 7px;
+  overflow: hidden;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.category-detail-title i {
+  color: var(--line);
+  font-style: normal;
+}
+
 .category-summary-item details li b {
+  justify-self: end;
   color: var(--text);
   white-space: nowrap;
+}
+
+.category-detail-edit {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .month-switcher button {
@@ -937,6 +979,14 @@ dd {
   font-size: 22px;
 }
 
+.edit-header > div {
+  display: none;
+}
+
+.edit-header {
+  justify-content: flex-end;
+}
+
 .sheet-close {
   width: 34px;
   height: 34px;
@@ -948,25 +998,41 @@ dd {
 }
 
 .edit-summary {
-  margin-top: 14px;
-  padding: 13px 0;
-  border-top: 1px solid var(--line);
+  margin-top: 4px;
+  padding: 0 0 13px;
   border-bottom: 1px solid var(--line);
 }
 
 .edit-summary div {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
-.edit-summary strong,
+.edit-summary input,
 .edit-summary p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.edit-summary p {
+.edit-summary input {
+  order: 2;
+  display: block;
+  width: 100%;
+  min-width: 0;
   margin-top: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 850;
+  outline: none;
+}
+
+.edit-summary p {
+  order: 1;
+  margin-top: 0;
   color: var(--muted);
   font-size: 13px;
 }
@@ -976,9 +1042,94 @@ dd {
   white-space: nowrap;
 }
 
+.edit-summary b.is-income {
+  color: var(--green);
+}
+
 .edit-form {
   margin-top: 14px;
   min-width: 0;
+}
+
+.edit-type-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 5px;
+  border-radius: 14px;
+  background: var(--soft);
+}
+
+.edit-type-switch button {
+  min-height: 38px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.edit-type-switch button.active {
+  background: var(--green);
+  color: white;
+  box-shadow: 0 6px 16px rgba(52, 199, 89, 0.24);
+}
+
+.edit-form label[for="expense-edit-date"] {
+  display: none;
+}
+
+.date-picker-row {
+  display: grid;
+  grid-template-columns: minmax(58px, auto) minmax(0, 1fr) 26px;
+  align-items: center;
+  width: 100%;
+  min-height: 58px;
+  padding: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.date-picker-row span {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.date-picker-row strong {
+  justify-self: end;
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 20px;
+  font-weight: 750;
+}
+
+.date-picker-row i {
+  justify-self: end;
+  width: 24px;
+  height: 24px;
+  font-size: 0;
+  font-style: normal;
+  line-height: 0;
+  background: center / 18px 18px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.date-picker-row i::before {
+  content: none;
+}
+
+.native-date-input {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
 }
 
 .edit-form label {
@@ -1006,6 +1157,18 @@ dd {
   font: inherit;
 }
 
+.edit-form .native-date-input {
+  position: absolute;
+  width: 1px;
+  max-width: 1px;
+  min-height: 0;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .edit-form input + label {
   margin-top: 12px;
 }
@@ -1023,8 +1186,19 @@ dd {
 }
 
 .edit-actions button[type="submit"] {
-  background: var(--blue);
+  background: var(--green);
   color: white;
+}
+
+.danger-action {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 12px;
+  border-radius: 13px;
+  background: rgba(255, 59, 48, 0.12);
+  color: var(--red);
+  font-size: 15px;
+  font-weight: 850;
 }
 
 .secondary-action {
