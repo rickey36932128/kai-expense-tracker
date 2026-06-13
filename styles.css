@@ -507,10 +507,19 @@ dd {
 }
 
 [data-screen="records"] {
-  overflow-y: auto;
+  height: 100%;
+  max-height: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
   padding-bottom: calc(120px + env(safe-area-inset-bottom));
   scroll-padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+}
+
+[data-screen="records"].active {
+  display: block;
 }
 
 .analysis-balance-card {
