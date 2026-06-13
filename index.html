@@ -5,27 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#f2f2f7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="????" />
+    <meta name="apple-mobile-web-app-title" content="蛋黃小帳" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <title>????</title>
-    <link rel="manifest" href="manifest.webmanifest?v=18" />
+    <title>蛋黃小帳</title>
+    <link rel="manifest" href="manifest.webmanifest?v=19" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=18" />
+    <link rel="stylesheet" href="styles.css?v=19" />
   </head>
   <body>
-    <main class="phone-shell" aria-label="???? App">
+    <main class="phone-shell" aria-label="蛋黃小帳 App">
       <div class="update-status" id="update-status" role="status" aria-live="polite" hidden>
-        <span id="update-status-text">?????</span>
+        <span id="update-status-text">檢查更新中</span>
         <i></i>
       </div>
 
       <section class="screen active home-screen" data-screen="home">
         <header class="top-bar with-currency">
           <div class="top-title">
-            <p class="eyebrow">??</p>
-            <h1>??</h1>
+            <p class="eyebrow">今天</p>
+            <h1>記帳</h1>
           </div>
-          <div class="currency-switch" aria-label="????">
+          <div class="currency-switch" aria-label="首頁貨幣">
             <button type="button" data-currency="TWD">TWD</button>
             <button type="button" data-currency="JPY">JPY</button>
           </div>
@@ -33,28 +33,28 @@
 
         <section class="summary-band">
           <div>
-            <p>????</p>
+            <p>本月支出</p>
             <strong id="month-total">NT$ 0</strong>
           </div>
           <div>
-            <p>????</p>
+            <p>今日支出</p>
             <strong id="today-total">NT$ 0</strong>
           </div>
         </section>
 
         <article class="parsed-card" id="parsed-card" aria-live="polite">
           <div>
-            <p>????</p>
-            <h2 id="parsed-title">????</h2>
+            <p>最近新增</p>
+            <h2 id="parsed-title">尚未新增</h2>
           </div>
           <strong id="parsed-amount">NT$ 0</strong>
           <dl>
             <div>
-              <dt>??</dt>
+              <dt>分類</dt>
               <dd id="parsed-category">-</dd>
             </div>
             <div>
-              <dt>??</dt>
+              <dt>日期</dt>
               <dd id="parsed-date">-</dd>
             </div>
           </dl>
@@ -62,59 +62,59 @@
 
         <section class="list-section home-list-section">
           <div class="section-heading">
-            <h2>????</h2>
-            <button type="button" data-target-tab="records">????</button>
+            <h2>最近紀錄</h2>
+            <button type="button" data-target-tab="records">查看全部</button>
           </div>
           <ul class="transaction-list" id="recent-list"></ul>
         </section>
 
-        <div class="entry-mode-switch" aria-label="????">
-          <button class="active" type="button" data-entry-type="expense">??</button>
-          <button type="button" data-entry-type="income">??</button>
+        <div class="entry-mode-switch" aria-label="新增類型">
+          <button class="active" type="button" data-entry-type="expense">支出</button>
+          <button type="button" data-entry-type="income">收入</button>
         </div>
 
         <form class="composer" id="expense-form">
           <input
             id="expense-input"
-            aria-label="??????"
-            placeholder="?????"
+            aria-label="輸入記帳文字"
+            placeholder="輸入一句話"
             autocomplete="off"
             enterkeyhint="send"
             inputmode="text"
           />
-          <button type="submit" aria-label="??">+</button>
+          <button type="submit" aria-label="送出">+</button>
         </form>
       </section>
 
       <section class="screen" data-screen="records">
         <header class="top-bar">
-          <p class="eyebrow">?????</p>
-          <h1>??</h1>
+          <p class="eyebrow">記帳小旺來</p>
+          <h1>分析</h1>
         </header>
         <div class="month-switcher">
-          <button type="button" id="prev-month" aria-label="????">&lt;</button>
-          <strong id="selected-month-label">??</strong>
-          <button type="button" id="next-month" aria-label="????">&gt;</button>
+          <button type="button" id="prev-month" aria-label="上一個月">&lt;</button>
+          <strong id="selected-month-label">本月</strong>
+          <button type="button" id="next-month" aria-label="下一個月">&gt;</button>
         </div>
         <section class="analysis-balance-card">
           <div class="balance-card-head">
-            <p>???</p>
+            <p>月結餘</p>
             <span id="analysis-currency">TWD</span>
           </div>
           <strong id="month-balance">NT$ 0</strong>
           <div class="balance-card-foot">
-            <span>??? <b id="records-expense-total">0</b></span>
-            <span>??? <b id="records-income-total">0</b></span>
+            <span>月支出 <b id="records-expense-total">0</b></span>
+            <span>月收入 <b id="records-income-total">0</b></span>
           </div>
         </section>
-        <div class="analysis-toggle" aria-label="????">
-          <button class="active" type="button" data-analysis-type="expense">??</button>
-          <button type="button" data-analysis-type="income">??</button>
+        <div class="analysis-toggle" aria-label="分析類型">
+          <button class="active" type="button" data-analysis-type="expense">支出</button>
+          <button type="button" data-analysis-type="income">收入</button>
         </div>
         <section class="chart-card">
           <div class="donut-chart" id="category-chart" aria-hidden="true">
             <div>
-              <span id="chart-total-label">???</span>
+              <span id="chart-total-label">總支出</span>
               <strong id="records-total">NT$ 0</strong>
               <small id="chart-currency">NT$</small>
             </div>
@@ -122,7 +122,7 @@
           <div class="chart-legend" id="chart-legend"></div>
         </section>
         <section class="list-section fill-section analysis-list-section">
-          <h2 id="records-list-title">????</h2>
+          <h2 id="records-list-title">分類彙總</h2>
           <ul class="category-summary-list" id="records-list"></ul>
         </section>
       </section>
@@ -130,41 +130,41 @@
       <section class="screen" data-screen="debts">
         <header class="top-bar with-currency">
           <div class="top-title">
-            <p class="eyebrow">????</p>
-            <h1>??</h1>
+            <p class="eyebrow">朋友欠款</p>
+            <h1>欠款</h1>
           </div>
-          <div class="currency-switch" aria-label="????">
+          <div class="currency-switch" aria-label="欠款貨幣">
             <button type="button" data-currency="TWD">TWD</button>
             <button type="button" data-currency="JPY">JPY</button>
           </div>
         </header>
 
         <section class="debt-total">
-          <p>????????</p>
+          <p>朋友欠你的總金額</p>
           <strong id="debt-total">NT$ 0</strong>
-          <span id="debt-count">0 ?</span>
+          <span id="debt-count">0 筆</span>
         </section>
 
         <form class="debt-form" id="debt-form">
           <label>
-            <span>??</span>
-            <input id="friend-name" name="friend" placeholder="?????" autocomplete="off" />
+            <span>朋友</span>
+            <input id="friend-name" name="friend" placeholder="例如：小明" autocomplete="off" />
           </label>
           <label>
-            <span>??</span>
-            <input id="debt-item" name="item" placeholder="?????" autocomplete="off" />
+            <span>項目</span>
+            <input id="debt-item" name="item" placeholder="例如：晚餐" autocomplete="off" />
           </label>
           <label>
-            <span>??</span>
-            <input id="debt-amount" name="amount" inputmode="numeric" placeholder="???120" autocomplete="off" />
+            <span>金額</span>
+            <input id="debt-amount" name="amount" inputmode="numeric" placeholder="例如：120" autocomplete="off" />
           </label>
-          <button type="submit">????</button>
+          <button type="submit">新增欠款</button>
         </form>
 
         <section class="list-section fill-section">
           <div class="section-heading">
-            <h2>????</h2>
-            <button type="button" id="clear-debts">????</button>
+            <h2>欠款清單</h2>
+            <button type="button" id="clear-debts">清空欠款</button>
           </div>
           <ul class="debt-list" id="debt-list"></ul>
         </section>
@@ -172,107 +172,107 @@
 
       <section class="screen" data-screen="settings">
         <header class="top-bar">
-          <p class="eyebrow">??</p>
-          <h1>??</h1>
+          <p class="eyebrow">偏好</p>
+          <h1>設定</h1>
         </header>
         <ul class="settings-list">
           <li>
-            <span>??</span>
+            <span>貨幣</span>
             <div class="settings-currency-control">
               <strong id="settings-currency">TWD</strong>
-              <div class="currency-switch" aria-label="????">
+              <div class="currency-switch" aria-label="設定貨幣">
                 <button type="button" data-currency="TWD">TWD</button>
                 <button type="button" data-currency="JPY">JPY</button>
               </div>
             </div>
           </li>
           <li>
-            <span>????</span>
-            <strong>???????</strong>
+            <span>資料儲存</span>
+            <strong>只存在這台手機</strong>
           </li>
           <li>
-            <span>????</span>
-            <strong id="offline-status">???</strong>
+            <span>離線狀態</span>
+            <strong id="offline-status">檢查中</strong>
           </li>
           <li>
-            <span>????</span>
-            <button class="inline-action" type="button" id="check-update">????</button>
+            <span>版本更新</span>
+            <button class="inline-action" type="button" id="check-update">檢查更新</button>
           </li>
           <li>
-            <span>????</span>
-            <strong id="app-version">v18</strong>
+            <span>目前版本</span>
+            <strong id="app-version">v19</strong>
           </li>
           <li>
-            <span>?????</span>
-            <strong>Safari ????</strong>
+            <span>加入主畫面</span>
+            <strong>Safari 分享選單</strong>
           </li>
         </ul>
 
         <section class="danger-zone">
-          <button type="button" id="reset-data">??????</button>
+          <button type="button" id="reset-data">清空本機資料</button>
         </section>
       </section>
 
-      <section class="edit-sheet" id="expense-edit-sheet" aria-label="????" hidden>
+      <section class="edit-sheet" id="expense-edit-sheet" aria-label="編輯紀錄" hidden>
         <div class="edit-card">
           <div class="edit-header">
             <div>
-              <p class="eyebrow">????</p>
-              <h2>????</h2>
+              <p class="eyebrow">最近紀錄</p>
+              <h2>編輯紀錄</h2>
             </div>
-            <button type="button" class="sheet-close" id="expense-edit-close" aria-label="??">x</button>
+            <button type="button" class="sheet-close" id="expense-edit-close" aria-label="關閉">x</button>
           </div>
           <div class="edit-summary">
             <div>
               <input type="text" id="expense-edit-title" autocomplete="off" required />
-              <p id="expense-edit-meta">??</p>
+              <p id="expense-edit-meta">備註</p>
             </div>
             <b id="expense-edit-amount" hidden>NT$ 0</b>
           </div>
           <form id="expense-edit-form" class="edit-form">
             <input type="hidden" id="expense-edit-id" />
             <input type="hidden" id="expense-edit-type" />
-            <div class="edit-type-switch" aria-label="????">
-              <button type="button" data-edit-type="expense">??</button>
-              <button type="button" data-edit-type="income">??</button>
+            <div class="edit-type-switch" aria-label="紀錄類型">
+              <button type="button" data-edit-type="expense">支出</button>
+              <button type="button" data-edit-type="income">收入</button>
             </div>
-            <label for="expense-edit-date">??</label>
+            <label for="expense-edit-date">日期</label>
             <button type="button" class="date-picker-row" id="expense-edit-date-trigger">
-              <span>??</span>
+              <span>日期</span>
               <strong id="expense-edit-date-label">-</strong>
-              <i>?</i>
+              <i>⌃</i>
             </button>
             <input class="native-date-input" type="date" id="expense-edit-date" required />
-            <label for="expense-edit-amount-input">??</label>
+            <label for="expense-edit-amount-input">金額</label>
             <input type="text" inputmode="numeric" id="expense-edit-amount-input" autocomplete="off" required />
             <div class="edit-actions">
-              <button type="button" class="secondary-action" id="expense-edit-cancel">??</button>
-              <button type="submit">??</button>
+              <button type="button" class="secondary-action" id="expense-edit-cancel">取消</button>
+              <button type="submit">儲存</button>
             </div>
           </form>
-          <button type="button" class="danger-action" id="expense-edit-delete">??</button>
+          <button type="button" class="danger-action" id="expense-edit-delete">刪除</button>
         </div>
       </section>
 
-      <nav class="tab-bar" aria-label="????">
-        <button class="active" type="button" data-target="home" aria-label="??">
+      <nav class="tab-bar" aria-label="主要導覽">
+        <button class="active" type="button" data-target="home" aria-label="首頁">
           <span>+</span>
-          ??
+          首頁
         </button>
-        <button type="button" data-target="records" aria-label="??">
+        <button type="button" data-target="records" aria-label="紀錄">
           <span>#</span>
-          ??
+          紀錄
         </button>
-        <button type="button" data-target="debts" aria-label="??">
+        <button type="button" data-target="debts" aria-label="欠款">
           <span>$</span>
-          ??
+          欠款
         </button>
-        <button type="button" data-target="settings" aria-label="??">
+        <button type="button" data-target="settings" aria-label="設定">
           <span>*</span>
-          ??
+          設定
         </button>
       </nav>
     </main>
-    <script src="script.js?v=18"></script>
+    <script src="script.js?v=19"></script>
   </body>
 </html>

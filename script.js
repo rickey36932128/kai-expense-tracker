@@ -1,5 +1,5 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v18";
+const APP_VERSION = "v19";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -127,15 +127,15 @@ function preventDoubleTapZoom(event) {
   event.preventDefault();
 }
 
-function createExpense(title, amount, category = "??", date = new Date()) {
+function createExpense(title, amount, category = "其他", date = new Date()) {
   return createMoneyItem(title, amount, category, date);
 }
 
-function createIncome(title, amount, category = "??", date = new Date()) {
+function createIncome(title, amount, category = "其他", date = new Date()) {
   return createMoneyItem(title, amount, category, date);
 }
 
-function createMoneyItem(title, amount, category = "??", date = new Date()) {
+function createMoneyItem(title, amount, category = "其他", date = new Date()) {
   return {
     id: createId(),
     title,
@@ -229,12 +229,12 @@ function hasCorruptText(value) {
 }
 
 function isSeedExpense(expense) {
-  const seeds = new Set(["??:85", "??:85", "??:35", "??:120"]);
+  const seeds = new Set(["咖啡:85", "早餐:85", "捷運:35", "午餐:120"]);
   return seeds.has(`${expense.title}:${Number(expense.amount)}`);
 }
 
 function isSeedDebt(debt) {
-  const seeds = new Set(["??:??:280", "??:???:1200", "??:??:400"]);
+  const seeds = new Set(["阿明:咖啡:280", "小美:電影票:1200", "家豪:宵夜:400"]);
   return seeds.has(`${debt.friend}:${debt.item}:${Number(debt.amount)}`);
 }
 
@@ -268,7 +268,7 @@ function setAnalysisType(type) {
 }
 
 function getCurrencyLabel(currency = getCurrency()) {
-  return currency === "JPY" ? "?" : "NT$";
+  return currency === "JPY" ? "¥" : "NT$";
 }
 
 function formatMoney(amount, currency = getCurrency()) {
@@ -279,9 +279,9 @@ function formatDateLabel(value) {
   const date = new Date(value);
   const today = new Date();
 
-  if (date.toDateString() === today.toDateString()) return "??";
+  if (date.toDateString() === today.toDateString()) return "今天";
 
-  return `${date.getMonth() + 1} ? ${date.getDate()} ?`;
+  return `${date.getMonth() + 1} 月 ${date.getDate()} 日`;
 }
 
 function formatShortDateLabel(value) {
@@ -295,7 +295,7 @@ function formatFullDateLabel(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
-  return `${date.getFullYear()}?${String(date.getMonth() + 1).padStart(2, "0")}?${String(date.getDate()).padStart(2, "0")}?`;
+  return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
 }
 
 function getMonthKey(value) {
@@ -308,19 +308,19 @@ function getSelectedMonthKey() {
 }
 
 function inferCategory(title) {
-  if (/??|??|??|??|??|??|?|?|?|??/i.test(title)) return "??";
-  if (/??|??|??|uber|???|??|??/i.test(title)) return "??";
-  if (/??|??|?|momo|pchome|??|??/i.test(title)) return "??";
-  if (/??|???|??|???|???/i.test(title)) return "??";
-  return "??";
+  if (/早餐|午餐|晚餐|咖啡|飲料|便當|餐|麵|飯|宵夜/i.test(title)) return "飲食";
+  if (/捷運|公車|高鐵|uber|計程車|油錢|停車/i.test(title)) return "交通";
+  if (/網購|衣服|鞋|momo|pchome|蝦皮|購物/i.test(title)) return "購物";
+  if (/全聯|家樂福|超市|日用品|衛生紙/i.test(title)) return "生活";
+  return "其他";
 }
 
 function inferIncomeCategory(title) {
-  if (/??|??|??|??|salary|pay/i.test(title)) return "??";
-  if (/??|bonus|??|??/i.test(title)) return "??";
-  if (/??|??|??/i.test(title)) return "??";
-  if (/??|??|??|??/i.test(title)) return "??";
-  return "????";
+  if (/薪水|薪資|工資|收入|salary|pay/i.test(title)) return "薪資";
+  if (/獎金|bonus|紅包|禮金/i.test(title)) return "獎金";
+  if (/退款|退費|退貨/i.test(title)) return "退款";
+  if (/利息|股息|投資|分潤/i.test(title)) return "投資";
+  return "其他收入";
 }
 
 function parseMoneyText(text, type = activeEntryType) {
@@ -436,7 +436,7 @@ function openExpenseEditorLegacy(id) {
   elements.expenseEditDate.value = formatDateInput(expense.date);
   elements.expenseEditAmountInput.value = Number(expense.amount).toLocaleString("en-US");
   elements.expenseEditTitle.textContent = expense.title;
-  elements.expenseEditMeta.textContent = `${expense.category} ? ${formatDateLabel(expense.date)}`;
+  elements.expenseEditMeta.textContent = `${expense.category} · ${formatDateLabel(expense.date)}`;
   elements.expenseEditAmount.textContent = `-${formatMoney(expense.amount, expense.currency)}`;
   elements.expenseEditSheet.hidden = false;
   elements.expenseEditDate.focus();
@@ -456,7 +456,7 @@ function openMoneyEditor(id, type) {
   elements.expenseEditDate.value = formatDateInput(record.date);
   elements.expenseEditAmountInput.value = Number(record.amount).toLocaleString("en-US");
   elements.expenseEditTitle.value = record.title;
-  elements.expenseEditMeta.textContent = "??";
+  elements.expenseEditMeta.textContent = "備註";
   updateEditDateLabel();
   elements.expenseEditAmount.textContent = `${type === "income" ? "+" : "-"}${formatMoney(record.amount, record.currency)}`;
   elements.expenseEditAmount.classList.toggle("is-income", type === "income");
@@ -629,16 +629,16 @@ function render() {
   elements.recordsIncomeTotal.textContent = formatPlainNumber(monthIncomeTotal);
   elements.analysisCurrency.textContent = currency;
   elements.chartCurrency.textContent = getCurrencyLabel(currency);
-  elements.chartTotalLabel.textContent = activeAnalysisType === "income" ? "???" : "???";
-  elements.selectedMonthLabel.textContent = `${selectedMonth.getFullYear()} ? ${selectedMonth.getMonth() + 1} ?`;
-  elements.recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} ?${activeAnalysisType === "income" ? "??" : "??"}??`;
+  elements.chartTotalLabel.textContent = activeAnalysisType === "income" ? "總收入" : "總支出";
+  elements.selectedMonthLabel.textContent = `${selectedMonth.getFullYear()} 年 ${selectedMonth.getMonth() + 1} 月`;
+  elements.recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月${activeAnalysisType === "income" ? "收入" : "支出"}分類`;
   elements.debtTotal.textContent = formatMoney(debtSum);
-  elements.debtCount.textContent = `${currencyDebts.length} ?`;
+  elements.debtCount.textContent = `${currencyDebts.length} 筆`;
   elements.settingsCurrency.textContent = currency;
   renderModeButtons();
 
   renderLatestTransaction(recentTransactions[0]);
-  renderTransactionList(elements.recentList, recentTransactions, "??????");
+  renderTransactionList(elements.recentList, recentTransactions, "目前沒有紀錄");
   renderCategoryAnalysis(selectedAnalysisItems, activeAnalysisType);
   renderDebtList(currencyDebts);
 }
@@ -677,7 +677,7 @@ function combineTransactions(expenses, incomes) {
 
 function renderLatestTransaction(item) {
   if (!item) {
-    document.querySelector("#parsed-title").textContent = "????";
+    document.querySelector("#parsed-title").textContent = "尚未新增";
     document.querySelector("#parsed-amount").textContent = formatMoney(0);
     document.querySelector("#parsed-category").textContent = "-";
     elements.parsedDate.textContent = "-";
@@ -704,10 +704,10 @@ function renderTransactionList(target, transactions, emptyText) {
           <span class="category-dot ${getCategoryClass(item.category)}"></span>
           <div>
             <strong>${escapeHtml(item.title)}</strong>
-            <p>${escapeHtml(item.category)} ? ${formatDateLabel(item.date)}</p>
+            <p>${escapeHtml(item.category)} · ${formatDateLabel(item.date)}</p>
           </div>
           <b class="${item.type === "income" ? "income-amount" : ""}">${item.type === "income" ? "+" : "-"}${formatMoney(item.amount, item.currency)}</b>
-          <button class="delete-button" type="button" data-delete-${item.type}="${item.id}" aria-label="?? ${escapeHtml(item.title)}">x</button>
+          <button class="delete-button" type="button" data-delete-${item.type}="${item.id}" aria-label="刪除 ${escapeHtml(item.title)}">x</button>
         </li>
       `
     )
@@ -745,7 +745,7 @@ function groupByCategory(items) {
 function renderDonutChart(groups, total) {
   if (!groups.length || total <= 0) {
     elements.categoryChart.style.background = "conic-gradient(#e5e5ea 0 100%)";
-    elements.chartLegend.innerHTML = `<p class="empty-chart">??????${activeAnalysisType === "income" ? "??" : "??"}??</p>`;
+    elements.chartLegend.innerHTML = `<p class="empty-chart">這個月還沒有${activeAnalysisType === "income" ? "收入" : "支出"}資料</p>`;
     return;
   }
 
@@ -775,7 +775,7 @@ function renderDonutChart(groups, total) {
 
 function renderCategorySummary(groups, type, total) {
   if (!groups.length) {
-    elements.recordsList.innerHTML = `<li class="empty-state">??????${type === "income" ? "??" : "??"}</li>`;
+    elements.recordsList.innerHTML = `<li class="empty-state">這個月還沒有${type === "income" ? "收入" : "支出"}</li>`;
     return;
   }
 
@@ -787,18 +787,18 @@ function renderCategorySummary(groups, type, total) {
         .map(
           (item) => `
             <li class="category-detail-row" data-edit-money="${item.id}" data-edit-money-type="${type}">
-              <span class="category-detail-title"><span>${formatShortDateLabel(item.date)}</span><i>?</i>${escapeHtml(item.title)}</span>
+              <span class="category-detail-title"><span>${formatShortDateLabel(item.date)}</span><i>│</i>${escapeHtml(item.title)}</span>
               <b>${sign}${formatPlainNumber(item.amount)}</b>
-              <button class="category-detail-edit" type="button" data-edit-money="${item.id}" data-edit-money-type="${type}" aria-label="?? ${escapeHtml(item.title)}">?</button>
+              <button class="category-detail-edit" type="button" data-edit-money="${item.id}" data-edit-money-type="${type}" aria-label="編輯 ${escapeHtml(item.title)}">＞</button>
             </li>
           `
         )
         .join("");
       const row = `
         <span class="category-summary-swatch" style="background:${getChartColor(index)}"></span>
-        <strong>${escapeHtml(group.category)} <em>(${group.count}?)</em></strong>
+        <strong>${escapeHtml(group.category)} <em>(${group.count}筆)</em></strong>
         <b class="summary-amount">${sign}${formatPlainNumber(group.amount)}</b>
-        <span class="summary-chevron${isExpandable ? "" : " summary-chevron-placeholder"}" aria-hidden="true">${isExpandable ? "?" : "?"}</span>
+        <span class="summary-chevron${isExpandable ? "" : " summary-chevron-placeholder"}" aria-hidden="true">${isExpandable ? "⌵" : "⌵"}</span>
       `;
 
       return `
@@ -824,7 +824,7 @@ function getChartColor(index) {
 
 function renderDebtList(debts) {
   if (!debts.length) {
-    elements.debtList.innerHTML = `<li class="empty-state">????????</li>`;
+    elements.debtList.innerHTML = `<li class="empty-state">目前沒有朋友欠款</li>`;
     return;
   }
 
@@ -835,10 +835,10 @@ function renderDebtList(debts) {
           <span class="avatar">${escapeHtml(debt.friend.slice(-1))}</span>
           <div>
             <strong>${escapeHtml(debt.friend)}</strong>
-            <p>${escapeHtml(debt.item)} ? ${formatDateLabel(debt.date)}</p>
+            <p>${escapeHtml(debt.item)} · ${formatDateLabel(debt.date)}</p>
           </div>
           <b>${formatMoney(debt.amount, debt.currency)}</b>
-          <button class="delete-button" data-delete-debt="${debt.id}" aria-label="?? ${escapeHtml(debt.friend)}">x</button>
+          <button class="delete-button" data-delete-debt="${debt.id}" aria-label="刪除 ${escapeHtml(debt.friend)}">x</button>
         </li>
       `
     )
@@ -847,10 +847,10 @@ function renderDebtList(debts) {
 
 function getCategoryClass(category) {
   const map = {
-    ??: "food",
-    ??: "transit",
-    ??: "shopping",
-    ??: "grocery",
+    飲食: "food",
+    交通: "transit",
+    購物: "shopping",
+    生活: "grocery",
   };
   return map[category] || "other";
 }
@@ -866,18 +866,18 @@ function escapeHtml(value) {
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
-    elements.offlineStatus.textContent = "???????";
+    elements.offlineStatus.textContent = "此瀏覽器不支援";
     return;
   }
 
   try {
     const registration = await navigator.serviceWorker.register("./sw.js?v=17");
-    elements.offlineStatus.textContent = "?????";
+    elements.offlineStatus.textContent = "可離線使用";
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (refreshingForUpdate) return;
       refreshingForUpdate = true;
-      setUpdateStatus("???????????", UPDATE_STATUS_HIDE_MS);
+      setUpdateStatus("更新完成，正在重新載入", UPDATE_STATUS_HIDE_MS);
       window.setTimeout(() => window.location.reload(), 450);
     });
 
@@ -887,20 +887,20 @@ async function registerServiceWorker() {
 
       worker.addEventListener("statechange", () => {
         if (worker.state === "installed" && navigator.serviceWorker.controller) {
-          setUpdateStatus("??????????", UPDATE_STATUS_HIDE_MS);
+          setUpdateStatus("新版已下載，正在安裝", UPDATE_STATUS_HIDE_MS);
           worker.postMessage({ type: "SKIP_WAITING" });
         }
       });
     });
 
-    elements.offlineStatus.textContent = "?????";
+    elements.offlineStatus.textContent = "可離線使用";
     await checkForUpdates(false, registration);
     window.setInterval(() => checkForUpdates(false, registration), UPDATE_CHECK_INTERVAL);
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") checkForUpdates(false, registration);
     });
   } catch {
-    elements.offlineStatus.textContent = "????????";
+    elements.offlineStatus.textContent = "離線功能尚未啟用";
   }
 }
 
@@ -910,22 +910,22 @@ async function checkForUpdates(isManual = false, existingRegistration = null) {
   const registration = existingRegistration || (await navigator.serviceWorker.getRegistration("./"));
   if (!registration) return;
 
-  if (isManual) setUpdateStatus("??????", UPDATE_STATUS_HIDE_MS);
+  if (isManual) setUpdateStatus("正在檢查更新", UPDATE_STATUS_HIDE_MS);
 
   try {
     await registration.update();
 
     if (registration.waiting) {
-      setUpdateStatus("??????????", UPDATE_STATUS_HIDE_MS);
+      setUpdateStatus("新版已下載，正在安裝", UPDATE_STATUS_HIDE_MS);
       registration.waiting.postMessage({ type: "SKIP_WAITING" });
       return;
     }
 
     if (isManual) {
-      setUpdateStatus("?????", 1600);
+      setUpdateStatus("已是最新版", 1600);
     }
   } catch {
-    if (isManual) setUpdateStatus("????????", 1800);
+    if (isManual) setUpdateStatus("目前無法檢查更新", 1800);
   }
 }
 
