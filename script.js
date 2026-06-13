@@ -1,5 +1,5 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v13";
+const APP_VERSION = "v14";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -37,6 +37,16 @@ function init() {
   elements.appVersion = document.querySelector("#app-version");
   elements.settingsCurrency = document.querySelector("#settings-currency");
   elements.currencyButtons = document.querySelectorAll("[data-currency]");
+  elements.expenseEditSheet = document.querySelector("#expense-edit-sheet");
+  elements.expenseEditForm = document.querySelector("#expense-edit-form");
+  elements.expenseEditId = document.querySelector("#expense-edit-id");
+  elements.expenseEditDate = document.querySelector("#expense-edit-date");
+  elements.expenseEditAmountInput = document.querySelector("#expense-edit-amount-input");
+  elements.expenseEditTitle = document.querySelector("#expense-edit-title");
+  elements.expenseEditMeta = document.querySelector("#expense-edit-meta");
+  elements.expenseEditAmount = document.querySelector("#expense-edit-amount");
+  elements.expenseEditClose = document.querySelector("#expense-edit-close");
+  elements.expenseEditCancel = document.querySelector("#expense-edit-cancel");
 
   document.addEventListener("dblclick", preventDoubleTapZoom, { passive: false });
   elements.expenseForm.addEventListener("submit", addExpenseFromText);
@@ -60,9 +70,15 @@ function init() {
     button.addEventListener("click", () => showTab(button.dataset.targetTab));
   });
 
-  elements.recentList.addEventListener("click", handleExpenseDelete);
-  elements.recordsList.addEventListener("click", handleExpenseDelete);
+  elements.recentList.addEventListener("click", handleExpenseListClick);
+  elements.recordsList.addEventListener("click", handleExpenseListClick);
   elements.debtList.addEventListener("click", handleDebtDelete);
+  elements.expenseEditForm.addEventListener("submit", saveExpenseDateEdit);
+  elements.expenseEditClose.addEventListener("click", closeExpenseEditor);
+  elements.expenseEditCancel.addEventListener("click", closeExpenseEditor);
+  elements.expenseEditSheet.addEventListener("click", (event) => {
+    if (event.target === elements.expenseEditSheet) closeExpenseEditor();
+  });
 
   saveState();
   render();
@@ -289,13 +305,81 @@ function addDebtFromForm(event) {
   render();
 }
 
-function handleExpenseDelete(event) {
+function handleExpenseListClick(event) {
   const button = event.target.closest("[data-delete-expense]");
-  if (!button) return;
+  if (button) {
+    deleteExpense(button.dataset.deleteExpense);
+    return;
+  }
 
-  state.expenses = state.expenses.filter((expense) => expense.id !== button.dataset.deleteExpense);
+  const item = event.target.closest("[data-edit-expense]");
+  if (!item) return;
+
+  openExpenseEditor(item.dataset.editExpense);
+}
+
+function deleteExpense(id) {
+  state.expenses = state.expenses.filter((expense) => expense.id !== id);
   saveState();
+  if (elements.expenseEditId.value === id) closeExpenseEditor();
   render();
+}
+
+function openExpenseEditor(id) {
+  const expense = state.expenses.find((item) => item.id === id);
+  if (!expense) return;
+
+  elements.expenseEditId.value = expense.id;
+  elements.expenseEditDate.value = formatDateInput(expense.date);
+  elements.expenseEditAmountInput.value = Number(expense.amount).toLocaleString("en-US");
+  elements.expenseEditTitle.textContent = expense.title;
+  elements.expenseEditMeta.textContent = `${expense.category} · ${formatDateLabel(expense.date)}`;
+  elements.expenseEditAmount.textContent = `-${formatMoney(expense.amount, expense.currency)}`;
+  elements.expenseEditSheet.hidden = false;
+  elements.expenseEditDate.focus();
+}
+
+function closeExpenseEditor() {
+  elements.expenseEditSheet.hidden = true;
+  elements.expenseEditForm.reset();
+  elements.expenseEditId.value = "";
+}
+
+function saveExpenseDateEdit(event) {
+  event.preventDefault();
+  const id = elements.expenseEditId.value;
+  const expense = state.expenses.find((item) => item.id === id);
+  const amount = parseAmountInput(elements.expenseEditAmountInput.value);
+  if (!expense || !elements.expenseEditDate.value || amount === null) return;
+
+  expense.date = mergeDateWithExistingTime(elements.expenseEditDate.value, expense.date);
+  expense.amount = amount;
+  saveState();
+  closeExpenseEditor();
+  render();
+}
+
+function parseAmountInput(value) {
+  const amount = Number(String(value || "").replaceAll(",", "").trim());
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  return Math.round(amount);
+}
+
+function formatDateInput(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function mergeDateWithExistingTime(dateText, existingValue) {
+  const [year, month, day] = dateText.split("-").map(Number);
+  const existing = new Date(existingValue);
+  const hours = Number.isNaN(existing.getTime()) ? 12 : existing.getHours();
+  const minutes = Number.isNaN(existing.getTime()) ? 0 : existing.getMinutes();
+  const seconds = Number.isNaN(existing.getTime()) ? 0 : existing.getSeconds();
+
+  return new Date(year, month - 1, day, hours, minutes, seconds).toISOString();
 }
 
 function handleDebtDelete(event) {
@@ -388,14 +472,14 @@ function renderExpenseList(target, expenses, emptyText) {
   target.innerHTML = expenses
     .map(
       (expense) => `
-        <li>
+        <li data-edit-expense="${expense.id}">
           <span class="category-dot ${getCategoryClass(expense.category)}"></span>
           <div>
             <strong>${escapeHtml(expense.title)}</strong>
             <p>${escapeHtml(expense.category)} · ${formatDateLabel(expense.date)}</p>
           </div>
           <b>-${formatMoney(expense.amount, expense.currency)}</b>
-          <button class="delete-button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">x</button>
+          <button class="delete-button" type="button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">x</button>
         </li>
       `
     )
@@ -451,7 +535,7 @@ async function registerServiceWorker() {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("./sw.js?v=13");
+    const registration = await navigator.serviceWorker.register("./sw.js?v=14");
     elements.offlineStatus.textContent = "可離線使用";
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {
