@@ -1,5 +1,6 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v19";
+const APP_VERSION = "v20";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v20";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -111,6 +112,7 @@ function init() {
 
   saveState();
   render();
+  repairAppCache();
   registerServiceWorker();
 }
 
@@ -871,7 +873,7 @@ async function registerServiceWorker() {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("./sw.js?v=17");
+    const registration = await navigator.serviceWorker.register(`./sw.js?${APP_VERSION}`);
     elements.offlineStatus.textContent = "可離線使用";
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -901,6 +903,23 @@ async function registerServiceWorker() {
     });
   } catch {
     elements.offlineStatus.textContent = "離線功能尚未啟用";
+  }
+}
+
+async function repairAppCache() {
+  if (!("caches" in window)) return;
+  if (localStorage.getItem(CACHE_REPAIR_KEY) === "done") return;
+
+  try {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter((key) => key.startsWith("kai-expense-tracker-") && key !== `kai-expense-tracker-${APP_VERSION}`)
+        .map((key) => caches.delete(key))
+    );
+    localStorage.setItem(CACHE_REPAIR_KEY, "done");
+  } catch {
+    // Cache cleanup is best-effort; local records stay in localStorage.
   }
 }
 
