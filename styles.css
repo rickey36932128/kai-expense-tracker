@@ -137,6 +137,14 @@ button {
   gap: 12px;
 }
 
+.home-screen .top-bar {
+  margin-bottom: 18px;
+}
+
+.home-screen h1 {
+  font-size: 34px;
+}
+
 .top-title {
   min-width: 0;
 }
@@ -204,12 +212,13 @@ h2 {
   gap: 1px;
   flex: 0 0 auto;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  border-radius: 20px;
 }
 
 .summary-band div {
   min-width: 0;
-  padding: 14px;
+  padding: 18px 16px;
   background: var(--surface);
 }
 
@@ -218,23 +227,46 @@ h2 {
 .debt-total p,
 .parsed-card p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .summary-band strong {
   display: block;
-  margin-top: 5px;
-  font-size: 19px;
+  margin-top: 7px;
+  font-size: 25px;
   line-height: 1.15;
   word-break: break-word;
 }
 
 .parsed-card {
+  position: relative;
   width: 100%;
   flex: 0 0 auto;
-  padding: 12px;
-  margin-bottom: 12px;
+  min-height: 178px;
+  padding: 18px;
+  margin-bottom: 16px;
+  border-radius: 22px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
+}
+
+.parsed-card.is-editable {
+  cursor: pointer;
+}
+
+.parsed-card.is-editable::after {
+  content: "＞";
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.parsed-card.is-editable:active {
+  transform: scale(0.99);
 }
 
 .parsed-card.is-hidden {
@@ -243,9 +275,10 @@ h2 {
 
 .parsed-card > strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
   color: var(--red);
-  font-size: 22px;
+  font-size: 32px;
+  line-height: 1.1;
 }
 
 .parsed-card > strong.is-income,
@@ -256,14 +289,14 @@ h2 {
 .parsed-card dl {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin: 10px 0 0;
+  gap: 10px;
+  margin: 18px 0 0;
 }
 
 .parsed-card dl div {
   min-width: 0;
-  padding: 9px;
-  border-radius: 12px;
+  padding: 13px;
+  border-radius: 14px;
   background: var(--surface-2);
 }
 

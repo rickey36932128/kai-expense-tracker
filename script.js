@@ -38,6 +38,7 @@ function init() {
   elements.categoryChart = document.querySelector("#category-chart");
   elements.chartLegend = document.querySelector("#chart-legend");
   elements.offlineStatus = document.querySelector("#offline-status");
+  elements.parsedCard = document.querySelector("#parsed-card");
   elements.parsedDate = document.querySelector("#parsed-date");
   elements.expenseForm = document.querySelector("#expense-form");
   elements.expenseInput = document.querySelector("#expense-input");
@@ -97,7 +98,9 @@ function init() {
     button.addEventListener("click", () => showTab(button.dataset.targetTab));
   });
 
-  elements.recentList.addEventListener("click", handleExpenseListClick);
+  if (elements.recentList) elements.recentList.addEventListener("click", handleExpenseListClick);
+  elements.parsedCard.addEventListener("click", openLatestCardEditor);
+  elements.parsedCard.addEventListener("keydown", handleLatestCardKeydown);
   elements.recordsList.addEventListener("click", handleExpenseListClick);
   elements.debtList.addEventListener("click", handleDebtDelete);
   elements.expenseEditForm.addEventListener("submit", saveExpenseDateEdit);
@@ -416,6 +419,21 @@ function handleExpenseListClick(event) {
   openExpenseEditor(item.dataset.editExpense);
 }
 
+function openLatestCardEditor() {
+  const id = elements.parsedCard.dataset.editMoney;
+  if (!id) return;
+
+  openMoneyEditor(id, elements.parsedCard.dataset.editMoneyType || "expense");
+}
+
+function handleLatestCardKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  if (!elements.parsedCard.dataset.editMoney) return;
+
+  event.preventDefault();
+  openLatestCardEditor();
+}
+
 function deleteExpense(id) {
   state.expenses = state.expenses.filter((expense) => expense.id !== id);
   saveState();
@@ -640,7 +658,7 @@ function render() {
   renderModeButtons();
 
   renderLatestTransaction(recentTransactions[0]);
-  renderTransactionList(elements.recentList, recentTransactions, "目前沒有紀錄");
+  if (elements.recentList) renderTransactionList(elements.recentList, recentTransactions, "目前沒有紀錄");
   renderCategoryAnalysis(selectedAnalysisItems, activeAnalysisType);
   renderDebtList(currencyDebts);
 }
@@ -683,9 +701,21 @@ function renderLatestTransaction(item) {
     document.querySelector("#parsed-amount").textContent = formatMoney(0);
     document.querySelector("#parsed-category").textContent = "-";
     elements.parsedDate.textContent = "-";
+    delete elements.parsedCard.dataset.editMoney;
+    delete elements.parsedCard.dataset.editMoneyType;
+    elements.parsedCard.classList.remove("is-editable");
+    elements.parsedCard.removeAttribute("role");
+    elements.parsedCard.removeAttribute("tabindex");
+    elements.parsedCard.removeAttribute("aria-label");
     return;
   }
 
+  elements.parsedCard.dataset.editMoney = item.id;
+  elements.parsedCard.dataset.editMoneyType = item.type;
+  elements.parsedCard.classList.add("is-editable");
+  elements.parsedCard.setAttribute("role", "button");
+  elements.parsedCard.setAttribute("tabindex", "0");
+  elements.parsedCard.setAttribute("aria-label", `編輯 ${item.title}`);
   document.querySelector("#parsed-title").textContent = item.title;
   document.querySelector("#parsed-amount").textContent = `${item.type === "income" ? "+" : "-"}${formatMoney(item.amount, item.currency)}`;
   document.querySelector("#parsed-amount").classList.toggle("is-income", item.type === "income");
