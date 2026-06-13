@@ -1,5 +1,5 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v15";
+const APP_VERSION = "v17";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -8,6 +8,8 @@ const CURRENCY_OPTIONS = new Set(["TWD", "JPY"]);
 const elements = {};
 let state = loadState();
 let selectedMonth = new Date();
+let activeEntryType = "expense";
+let activeAnalysisType = "expense";
 let refreshingForUpdate = false;
 let updateStatusTimer = 0;
 
@@ -26,6 +28,14 @@ function init() {
   elements.debtCount = document.querySelector("#debt-count");
   elements.selectedMonthLabel = document.querySelector("#selected-month-label");
   elements.recordsListTitle = document.querySelector("#records-list-title");
+  elements.monthBalance = document.querySelector("#month-balance");
+  elements.recordsExpenseTotal = document.querySelector("#records-expense-total");
+  elements.recordsIncomeTotal = document.querySelector("#records-income-total");
+  elements.analysisCurrency = document.querySelector("#analysis-currency");
+  elements.chartTotalLabel = document.querySelector("#chart-total-label");
+  elements.chartCurrency = document.querySelector("#chart-currency");
+  elements.categoryChart = document.querySelector("#category-chart");
+  elements.chartLegend = document.querySelector("#chart-legend");
   elements.offlineStatus = document.querySelector("#offline-status");
   elements.parsedDate = document.querySelector("#parsed-date");
   elements.expenseForm = document.querySelector("#expense-form");
@@ -37,6 +47,8 @@ function init() {
   elements.appVersion = document.querySelector("#app-version");
   elements.settingsCurrency = document.querySelector("#settings-currency");
   elements.currencyButtons = document.querySelectorAll("[data-currency]");
+  elements.entryTypeButtons = document.querySelectorAll("[data-entry-type]");
+  elements.analysisTypeButtons = document.querySelectorAll("[data-analysis-type]");
   elements.expenseEditSheet = document.querySelector("#expense-edit-sheet");
   elements.expenseEditForm = document.querySelector("#expense-edit-form");
   elements.expenseEditId = document.querySelector("#expense-edit-id");
@@ -60,6 +72,12 @@ function init() {
   elements.appVersion.textContent = APP_VERSION;
   elements.currencyButtons.forEach((button) => {
     button.addEventListener("click", () => setCurrency(button.dataset.currency));
+  });
+  elements.entryTypeButtons.forEach((button) => {
+    button.addEventListener("click", () => setEntryType(button.dataset.entryType));
+  });
+  elements.analysisTypeButtons.forEach((button) => {
+    button.addEventListener("click", () => setAnalysisType(button.dataset.analysisType));
   });
 
   elements.tabButtons.forEach((button) => {
@@ -88,6 +106,7 @@ function init() {
 function getDefaultState() {
   return {
     expenses: [],
+    incomes: [],
     debts: [],
     currency: DEFAULT_CURRENCY,
   };
@@ -98,6 +117,14 @@ function preventDoubleTapZoom(event) {
 }
 
 function createExpense(title, amount, category = "其他", date = new Date()) {
+  return createMoneyItem(title, amount, category, date);
+}
+
+function createIncome(title, amount, category = "其他", date = new Date()) {
+  return createMoneyItem(title, amount, category, date);
+}
+
+function createMoneyItem(title, amount, category = "其他", date = new Date()) {
   return {
     id: createId(),
     title,
@@ -146,6 +173,7 @@ function isValidState(value) {
 function cleanState(value) {
   return {
     expenses: value.expenses.filter((expense) => isValidExpense(expense) && !isSeedExpense(expense)).map(normalizeMoneyItem),
+    incomes: Array.isArray(value.incomes) ? value.incomes.filter(isValidMoneyItem).map(normalizeMoneyItem) : [],
     debts: value.debts.filter((debt) => isValidDebt(debt) && !isSeedDebt(debt)).map(normalizeMoneyItem),
     currency: CURRENCY_OPTIONS.has(value.currency) ? value.currency : DEFAULT_CURRENCY,
   };
@@ -159,6 +187,10 @@ function normalizeMoneyItem(item) {
 }
 
 function isValidExpense(expense) {
+  return isValidMoneyItem(expense);
+}
+
+function isValidMoneyItem(expense) {
   return (
     expense &&
     typeof expense.id === "string" &&
@@ -211,6 +243,19 @@ function setCurrency(currency) {
   render();
 }
 
+function setEntryType(type) {
+  if (!["expense", "income"].includes(type)) return;
+  activeEntryType = type;
+  renderModeButtons();
+  elements.expenseInput.focus();
+}
+
+function setAnalysisType(type) {
+  if (!["expense", "income"].includes(type)) return;
+  activeAnalysisType = type;
+  render();
+}
+
 function getCurrencyLabel(currency = getCurrency()) {
   return currency === "JPY" ? "¥" : "NT$";
 }
@@ -245,7 +290,15 @@ function inferCategory(title) {
   return "其他";
 }
 
-function parseExpense(text) {
+function inferIncomeCategory(title) {
+  if (/薪水|薪資|工資|收入|salary|pay/i.test(title)) return "薪資";
+  if (/獎金|bonus|紅包|禮金/i.test(title)) return "獎金";
+  if (/退款|退費|退貨/i.test(title)) return "退款";
+  if (/利息|股息|投資|分潤/i.test(title)) return "投資";
+  return "其他收入";
+}
+
+function parseMoneyText(text, type = activeEntryType) {
   const value = text.trim();
   const textFirstMatch = value.match(/^(.+?)\s*([0-9,]+)$/);
   const amountFirstMatch = value.match(/^([0-9,]+)\s*(.+?)$/);
@@ -258,21 +311,27 @@ function parseExpense(text) {
   const amount = Number(amountText.replaceAll(",", ""));
   if (!Number.isFinite(amount) || amount <= 0) return null;
 
-  return createExpense(title, amount, inferCategory(title));
+  return type === "income"
+    ? createIncome(title, amount, inferIncomeCategory(title))
+    : createExpense(title, amount, inferCategory(title));
 }
 
 function addExpenseFromText(event) {
   event.preventDefault();
-  const expense = parseExpense(elements.expenseInput.value);
+  const item = parseMoneyText(elements.expenseInput.value, activeEntryType);
 
-  if (!expense) {
+  if (!item) {
     elements.expenseInput.focus();
     elements.expenseInput.classList.add("is-invalid");
     window.setTimeout(() => elements.expenseInput.classList.remove("is-invalid"), 500);
     return;
   }
 
-  state.expenses.unshift(expense);
+  if (activeEntryType === "income") {
+    state.incomes.unshift(item);
+  } else {
+    state.expenses.unshift(item);
+  }
   saveState();
   elements.expenseInput.value = "";
   elements.expenseInput.focus();
@@ -312,6 +371,12 @@ function handleExpenseListClick(event) {
     return;
   }
 
+  const incomeButton = event.target.closest("[data-delete-income]");
+  if (incomeButton) {
+    deleteIncome(incomeButton.dataset.deleteIncome);
+    return;
+  }
+
   const item = event.target.closest("[data-edit-expense]");
   if (!item) return;
 
@@ -322,6 +387,12 @@ function deleteExpense(id) {
   state.expenses = state.expenses.filter((expense) => expense.id !== id);
   saveState();
   if (elements.expenseEditId.value === id) closeExpenseEditor();
+  render();
+}
+
+function deleteIncome(id) {
+  state.incomes = state.incomes.filter((income) => income.id !== id);
+  saveState();
   render();
 }
 
@@ -421,26 +492,38 @@ function render() {
   const today = new Date().toDateString();
   const currency = getCurrency();
   const currencyExpenses = state.expenses.filter((expense) => expense.currency === currency);
+  const currencyIncomes = state.incomes.filter((income) => income.currency === currency);
   const currencyDebts = state.debts.filter((debt) => debt.currency === currency);
   const thisMonthExpenses = currencyExpenses.filter((expense) => getMonthKey(expense.date) === nowKey);
   const todayExpenses = currencyExpenses.filter((expense) => new Date(expense.date).toDateString() === today);
-  const recentExpenses = currencyExpenses.slice(0, 4);
+  const recentTransactions = combineTransactions(currencyExpenses, currencyIncomes).slice(0, 4);
   const selectedExpenses = currencyExpenses.filter((expense) => getMonthKey(expense.date) === getSelectedMonthKey());
+  const selectedIncomes = currencyIncomes.filter((income) => getMonthKey(income.date) === getSelectedMonthKey());
+  const selectedAnalysisItems = activeAnalysisType === "income" ? selectedIncomes : selectedExpenses;
+  const monthExpenseTotal = sumAmounts(selectedExpenses);
+  const monthIncomeTotal = sumAmounts(selectedIncomes);
+  const monthBalance = monthIncomeTotal - monthExpenseTotal;
   const debtSum = currencyDebts.reduce((sum, debt) => sum + Number(debt.amount), 0);
 
   elements.monthTotal.textContent = formatMoney(sumAmounts(thisMonthExpenses));
   elements.todayTotal.textContent = formatMoney(sumAmounts(todayExpenses));
-  elements.recordsTotal.textContent = formatMoney(sumAmounts(selectedExpenses));
+  elements.recordsTotal.textContent = formatChartTotal(sumAmounts(selectedAnalysisItems), activeAnalysisType);
+  elements.monthBalance.textContent = formatSignedMoney(monthBalance, currency);
+  elements.recordsExpenseTotal.textContent = formatPlainNumber(monthExpenseTotal);
+  elements.recordsIncomeTotal.textContent = formatPlainNumber(monthIncomeTotal);
+  elements.analysisCurrency.textContent = currency;
+  elements.chartCurrency.textContent = getCurrencyLabel(currency);
+  elements.chartTotalLabel.textContent = activeAnalysisType === "income" ? "總收入" : "總支出";
   elements.selectedMonthLabel.textContent = `${selectedMonth.getFullYear()} 年 ${selectedMonth.getMonth() + 1} 月`;
-  elements.recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月紀錄`;
+  elements.recordsListTitle.textContent = `${selectedMonth.getMonth() + 1} 月${activeAnalysisType === "income" ? "收入" : "支出"}分類`;
   elements.debtTotal.textContent = formatMoney(debtSum);
   elements.debtCount.textContent = `${currencyDebts.length} 筆`;
   elements.settingsCurrency.textContent = currency;
-  elements.currencyButtons.forEach((button) => button.classList.toggle("active", button.dataset.currency === currency));
+  renderModeButtons();
 
-  renderLatestExpense(currencyExpenses[0]);
-  renderExpenseList(elements.recentList, recentExpenses, "目前沒有紀錄");
-  renderExpenseList(elements.recordsList, selectedExpenses, "這個月還沒有支出");
+  renderLatestTransaction(recentTransactions[0]);
+  renderTransactionList(elements.recentList, recentTransactions, "目前沒有紀錄");
+  renderCategoryAnalysis(selectedAnalysisItems, activeAnalysisType);
   renderDebtList(currencyDebts);
 }
 
@@ -448,8 +531,36 @@ function sumAmounts(items) {
   return items.reduce((sum, item) => sum + Number(item.amount), 0);
 }
 
-function renderLatestExpense(expense) {
-  if (!expense) {
+function formatPlainNumber(amount) {
+  return Number(amount).toLocaleString(getCurrency() === "JPY" ? "ja-JP" : "zh-Hant-TW");
+}
+
+function formatChartTotal(amount, type) {
+  const sign = type === "income" || Number(amount) === 0 ? "" : "-";
+  return `${sign}${formatPlainNumber(amount)}`;
+}
+
+function formatSignedMoney(amount, currency = getCurrency()) {
+  const sign = Number(amount) < 0 ? "-" : "";
+  return `${sign}${formatMoney(Math.abs(amount), currency)}`;
+}
+
+function renderModeButtons() {
+  const currency = getCurrency();
+  elements.currencyButtons.forEach((button) => button.classList.toggle("active", button.dataset.currency === currency));
+  elements.entryTypeButtons.forEach((button) => button.classList.toggle("active", button.dataset.entryType === activeEntryType));
+  elements.analysisTypeButtons.forEach((button) => button.classList.toggle("active", button.dataset.analysisType === activeAnalysisType));
+}
+
+function combineTransactions(expenses, incomes) {
+  return [
+    ...expenses.map((item) => ({ ...item, type: "expense" })),
+    ...incomes.map((item) => ({ ...item, type: "income" })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function renderLatestTransaction(item) {
+  if (!item) {
     document.querySelector("#parsed-title").textContent = "尚未新增";
     document.querySelector("#parsed-amount").textContent = formatMoney(0);
     document.querySelector("#parsed-category").textContent = "-";
@@ -457,33 +568,141 @@ function renderLatestExpense(expense) {
     return;
   }
 
-  document.querySelector("#parsed-title").textContent = expense.title;
-  document.querySelector("#parsed-amount").textContent = `-${formatMoney(expense.amount, expense.currency)}`;
-  document.querySelector("#parsed-category").textContent = expense.category;
-  elements.parsedDate.textContent = formatDateLabel(expense.date);
+  document.querySelector("#parsed-title").textContent = item.title;
+  document.querySelector("#parsed-amount").textContent = `${item.type === "income" ? "+" : "-"}${formatMoney(item.amount, item.currency)}`;
+  document.querySelector("#parsed-amount").classList.toggle("is-income", item.type === "income");
+  document.querySelector("#parsed-category").textContent = item.category;
+  elements.parsedDate.textContent = formatDateLabel(item.date);
 }
 
-function renderExpenseList(target, expenses, emptyText) {
-  if (!expenses.length) {
+function renderTransactionList(target, transactions, emptyText) {
+  if (!transactions.length) {
     target.innerHTML = `<li class="empty-state">${emptyText}</li>`;
     return;
   }
 
-  target.innerHTML = expenses
+  target.innerHTML = transactions
     .map(
-      (expense) => `
-        <li data-edit-expense="${expense.id}">
-          <span class="category-dot ${getCategoryClass(expense.category)}"></span>
+      (item) => `
+        <li ${item.type === "expense" ? `data-edit-expense="${item.id}"` : ""}>
+          <span class="category-dot ${getCategoryClass(item.category)}"></span>
           <div>
-            <strong>${escapeHtml(expense.title)}</strong>
-            <p>${escapeHtml(expense.category)} · ${formatDateLabel(expense.date)}</p>
+            <strong>${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.category)} · ${formatDateLabel(item.date)}</p>
           </div>
-          <b>-${formatMoney(expense.amount, expense.currency)}</b>
-          <button class="delete-button" type="button" data-delete-expense="${expense.id}" aria-label="刪除 ${escapeHtml(expense.title)}">x</button>
+          <b class="${item.type === "income" ? "income-amount" : ""}">${item.type === "income" ? "+" : "-"}${formatMoney(item.amount, item.currency)}</b>
+          <button class="delete-button" type="button" data-delete-${item.type}="${item.id}" aria-label="刪除 ${escapeHtml(item.title)}">x</button>
         </li>
       `
     )
     .join("");
+}
+
+function renderCategoryAnalysis(items, type) {
+  const groups = groupByCategory(items);
+  const total = groups.reduce((sum, group) => sum + group.amount, 0);
+
+  renderDonutChart(groups, total);
+  renderCategorySummary(groups, type, total);
+}
+
+function groupByCategory(items) {
+  const map = new Map();
+
+  items.forEach((item) => {
+    const current = map.get(item.category) || {
+      category: item.category,
+      amount: 0,
+      count: 0,
+      items: [],
+    };
+
+    current.amount += Number(item.amount);
+    current.count += 1;
+    current.items.push(item);
+    map.set(item.category, current);
+  });
+
+  return Array.from(map.values()).sort((a, b) => b.amount - a.amount);
+}
+
+function renderDonutChart(groups, total) {
+  if (!groups.length || total <= 0) {
+    elements.categoryChart.style.background = "conic-gradient(#e5e5ea 0 100%)";
+    elements.chartLegend.innerHTML = `<p class="empty-chart">這個月還沒有${activeAnalysisType === "income" ? "收入" : "支出"}資料</p>`;
+    return;
+  }
+
+  let cursor = 0;
+  const segments = groups.map((group, index) => {
+    const percent = (group.amount / total) * 100;
+    const start = cursor;
+    cursor += percent;
+    return `${getChartColor(index)} ${start}% ${cursor}%`;
+  });
+
+  elements.categoryChart.style.background = `conic-gradient(${segments.join(", ")})`;
+  elements.chartLegend.innerHTML = groups
+    .slice(0, 4)
+    .map((group, index) => {
+      const percent = Math.round((group.amount / total) * 1000) / 10;
+      return `
+        <div>
+          <i style="background:${getChartColor(index)}"></i>
+          <span>${escapeHtml(group.category)}</span>
+          <strong>${percent.toFixed(1)}%</strong>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderCategorySummary(groups, type, total) {
+  if (!groups.length) {
+    elements.recordsList.innerHTML = `<li class="empty-state">這個月還沒有${type === "income" ? "收入" : "支出"}</li>`;
+    return;
+  }
+
+  elements.recordsList.innerHTML = groups
+    .map((group, index) => {
+      const sign = type === "income" ? "+" : "-";
+      const isExpandable = group.count > 1;
+      const details = group.items
+        .map(
+          (item) => `
+            <li>
+              <span>${escapeHtml(item.title)}</span>
+              <b>${sign}${formatMoney(item.amount, item.currency)}</b>
+            </li>
+          `
+        )
+        .join("");
+      const row = `
+        <span class="category-summary-swatch" style="background:${getChartColor(index)}"></span>
+        <strong>${escapeHtml(group.category)} <em>(${group.count}筆)</em></strong>
+        <b class="summary-amount">${sign}${formatPlainNumber(group.amount)}</b>
+        <span class="summary-chevron${isExpandable ? "" : " summary-chevron-placeholder"}" aria-hidden="true">${isExpandable ? "⌵" : "⌵"}</span>
+      `;
+
+      return `
+        <li class="category-summary-item">
+          ${
+            isExpandable
+              ? `<details>
+            <summary>${row}</summary>
+            <ul>${details}</ul>
+          </details>`
+              : `<div class="category-summary-static">${row}</div>`
+          }
+        </li>
+      `;
+    })
+    .join("");
+}
+
+function getChartColor(index) {
+  const colors = ["#0a84ff", "#12bfa4", "#ffbe2e", "#af52de", "#ff6b3a", "#34c759"];
+  return colors[index % colors.length];
 }
 
 function renderDebtList(debts) {
@@ -535,7 +754,7 @@ async function registerServiceWorker() {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("./sw.js?v=15");
+    const registration = await navigator.serviceWorker.register("./sw.js?v=17");
     elements.offlineStatus.textContent = "可離線使用";
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {

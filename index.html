@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-title" content="蛋黃小帳" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>蛋黃小帳</title>
-    <link rel="manifest" href="manifest.webmanifest?v=15" />
+    <link rel="manifest" href="manifest.webmanifest?v=17" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=15" />
+    <link rel="stylesheet" href="styles.css?v=17" />
   </head>
   <body>
     <main class="phone-shell" aria-label="蛋黃小帳 App">
@@ -68,6 +68,11 @@
           <ul class="transaction-list" id="recent-list"></ul>
         </section>
 
+        <div class="entry-mode-switch" aria-label="新增類型">
+          <button class="active" type="button" data-entry-type="expense">支出</button>
+          <button type="button" data-entry-type="income">收入</button>
+        </div>
+
         <form class="composer" id="expense-form">
           <input
             id="expense-input"
@@ -83,21 +88,42 @@
 
       <section class="screen" data-screen="records">
         <header class="top-bar">
-          <p class="eyebrow">月份</p>
-          <h1>紀錄</h1>
+          <p class="eyebrow">記帳小旺來</p>
+          <h1>分析</h1>
         </header>
         <div class="month-switcher">
           <button type="button" id="prev-month" aria-label="上一個月">&lt;</button>
           <strong id="selected-month-label">本月</strong>
           <button type="button" id="next-month" aria-label="下一個月">&gt;</button>
         </div>
-        <section class="month-total">
-          <p>這個月總支出</p>
-          <strong id="records-total">NT$ 0</strong>
+        <section class="analysis-balance-card">
+          <div class="balance-card-head">
+            <p>月結餘</p>
+            <span id="analysis-currency">TWD</span>
+          </div>
+          <strong id="month-balance">NT$ 0</strong>
+          <div class="balance-card-foot">
+            <span>月支出 <b id="records-expense-total">0</b></span>
+            <span>月收入 <b id="records-income-total">0</b></span>
+          </div>
         </section>
-        <section class="list-section fill-section">
-          <h2 id="records-list-title">本月紀錄</h2>
-          <ul class="transaction-list" id="records-list"></ul>
+        <div class="analysis-toggle" aria-label="分析類型">
+          <button class="active" type="button" data-analysis-type="expense">支出</button>
+          <button type="button" data-analysis-type="income">收入</button>
+        </div>
+        <section class="chart-card">
+          <div class="donut-chart" id="category-chart" aria-hidden="true">
+            <div>
+              <span id="chart-total-label">總支出</span>
+              <strong id="records-total">NT$ 0</strong>
+              <small id="chart-currency">NT$</small>
+            </div>
+          </div>
+          <div class="chart-legend" id="chart-legend"></div>
+        </section>
+        <section class="list-section fill-section analysis-list-section">
+          <h2 id="records-list-title">分類彙總</h2>
+          <ul class="category-summary-list" id="records-list"></ul>
         </section>
       </section>
 
@@ -174,7 +200,7 @@
           </li>
           <li>
             <span>目前版本</span>
-            <strong id="app-version">v15</strong>
+            <strong id="app-version">v17</strong>
           </li>
           <li>
             <span>加入主畫面</span>
@@ -236,6 +262,6 @@
         </button>
       </nav>
     </main>
-    <script src="script.js?v=15"></script>
+    <script src="script.js?v=17"></script>
   </body>
 </html>
