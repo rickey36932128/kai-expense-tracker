@@ -1,6 +1,6 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v22";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v22";
+const APP_VERSION = "v23";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v23";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -784,7 +784,6 @@ function renderCategorySummary(groups, type, total) {
   elements.recordsList.innerHTML = groups
     .map((group, index) => {
       const sign = type === "income" ? "+" : "-";
-      const isExpandable = group.count > 1;
       const details = group.items
         .map(
           (item) => `
@@ -800,19 +799,15 @@ function renderCategorySummary(groups, type, total) {
         <span class="category-summary-swatch" style="background:${getChartColor(index)}"></span>
         <strong>${escapeHtml(group.category)} <em>(${group.count}筆)</em></strong>
         <b class="summary-amount">${sign}${formatPlainNumber(group.amount)}</b>
-        <span class="summary-chevron${isExpandable ? "" : " summary-chevron-placeholder"}" aria-hidden="true">${isExpandable ? "⌵" : "⌵"}</span>
+        <span class="summary-chevron" aria-hidden="true">⌵</span>
       `;
 
       return `
         <li class="category-summary-item">
-          ${
-            isExpandable
-              ? `<details>
+          <details>
             <summary>${row}</summary>
             <ul>${details}</ul>
-          </details>`
-              : `<div class="category-summary-static">${row}</div>`
-          }
+          </details>
         </li>
       `;
     })
