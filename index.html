@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-title" content="蛋黃小帳" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>蛋黃小帳</title>
-    <link rel="manifest" href="manifest.webmanifest?v=13" />
+    <link rel="manifest" href="manifest.webmanifest?v=14" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=13" />
+    <link rel="stylesheet" href="styles.css?v=14" />
   </head>
   <body>
     <main class="phone-shell" aria-label="蛋黃小帳 App">
@@ -152,7 +152,13 @@
         <ul class="settings-list">
           <li>
             <span>貨幣</span>
-            <strong id="settings-currency">TWD</strong>
+            <div class="settings-currency-control">
+              <strong id="settings-currency">TWD</strong>
+              <div class="currency-switch" aria-label="設定貨幣">
+                <button type="button" data-currency="TWD">TWD</button>
+                <button type="button" data-currency="JPY">JPY</button>
+              </div>
+            </div>
           </li>
           <li>
             <span>資料儲存</span>
@@ -168,7 +174,7 @@
           </li>
           <li>
             <span>目前版本</span>
-            <strong id="app-version">v13</strong>
+            <strong id="app-version">v14</strong>
           </li>
           <li>
             <span>加入主畫面</span>
@@ -179,6 +185,36 @@
         <section class="danger-zone">
           <button type="button" id="reset-data">清空本機資料</button>
         </section>
+      </section>
+
+      <section class="edit-sheet" id="expense-edit-sheet" aria-label="編輯紀錄" hidden>
+        <div class="edit-card">
+          <div class="edit-header">
+            <div>
+              <p class="eyebrow">最近紀錄</p>
+              <h2>編輯紀錄</h2>
+            </div>
+            <button type="button" class="sheet-close" id="expense-edit-close" aria-label="關閉">x</button>
+          </div>
+          <div class="edit-summary">
+            <div>
+              <strong id="expense-edit-title">-</strong>
+              <p id="expense-edit-meta">-</p>
+            </div>
+            <b id="expense-edit-amount">NT$ 0</b>
+          </div>
+          <form id="expense-edit-form" class="edit-form">
+            <input type="hidden" id="expense-edit-id" />
+            <label for="expense-edit-date">日期</label>
+            <input type="date" id="expense-edit-date" required />
+            <label for="expense-edit-amount-input">金額</label>
+            <input type="text" inputmode="numeric" id="expense-edit-amount-input" autocomplete="off" required />
+            <div class="edit-actions">
+              <button type="button" class="secondary-action" id="expense-edit-cancel">取消</button>
+              <button type="submit">儲存</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <nav class="tab-bar" aria-label="主要導覽">
@@ -200,6 +236,6 @@
         </button>
       </nav>
     </main>
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
   </body>
 </html>
