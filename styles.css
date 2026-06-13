@@ -605,6 +605,8 @@ dd {
 
 .edit-card {
   width: min(100%, 390px);
+  max-width: calc(100vw - 36px);
+  min-width: 0;
   padding: 16px;
   border-radius: 22px;
   background: var(--surface);
@@ -666,6 +668,7 @@ dd {
 
 .edit-form {
   margin-top: 14px;
+  min-width: 0;
 }
 
 .edit-form label {
@@ -678,11 +681,16 @@ dd {
 
 .edit-form input[type="date"],
 .edit-form input[type="text"] {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 46px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 13px;
+  appearance: none;
+  -webkit-appearance: none;
   background: var(--soft);
   color: var(--text);
   font: inherit;
