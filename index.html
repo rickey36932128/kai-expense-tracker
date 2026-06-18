@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-title" content="蛋黃小帳" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>蛋黃小帳</title>
-    <link rel="manifest" href="manifest.webmanifest?v=24" />
+    <link rel="manifest" href="manifest.webmanifest?v=25" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=24" />
+    <link rel="stylesheet" href="styles.css?v=25" />
   </head>
   <body>
     <main class="phone-shell" aria-label="蛋黃小帳 App">
@@ -160,12 +160,55 @@
         </section>
       </section>
 
-      <section class="screen" data-screen="settings">
-        <header class="top-bar">
-          <p class="eyebrow">偏好</p>
-          <h1>設定</h1>
+      <section class="screen asset-screen" data-screen="assets">
+        <header class="asset-topbar">
+          <h1>資產</h1>
+          <button type="button" id="asset-month-action">本月資產尚未更新</button>
         </header>
-        <ul class="settings-list">
+
+        <details class="net-worth-card" open>
+          <summary>
+            <span>目前淨資產</span>
+            <strong id="net-worth-total">NT$ 0</strong>
+            <em id="net-worth-change">較上月 NT$ 0 0%</em>
+          </summary>
+          <div class="net-worth-details">
+            <div>
+              <span>總資產</span>
+              <b id="asset-total">NT$ 0</b>
+            </div>
+            <div>
+              <span>總負債</span>
+              <b id="liability-total">NT$ 0</b>
+            </div>
+          </div>
+        </details>
+
+        <section class="asset-panel trend-panel">
+          <div class="asset-section-heading">
+            <h2>資產趨勢圖</h2>
+            <span id="asset-trend-range">最近 6 個月</span>
+          </div>
+          <div class="asset-trend-chart" id="asset-trend-chart"></div>
+        </section>
+
+        <section class="asset-panel">
+          <div class="asset-section-heading">
+            <h2 id="asset-detail-title">資產明細</h2>
+            <span id="asset-detail-total">NT$ 0</span>
+          </div>
+          <ul class="asset-detail-list" id="asset-detail-list"></ul>
+        </section>
+
+        <section class="asset-panel">
+          <div class="asset-section-heading">
+            <h2 id="liability-detail-title">負債明細</h2>
+            <span id="liability-detail-total">NT$ 0</span>
+          </div>
+          <ul class="asset-detail-list liability-list" id="liability-detail-list"></ul>
+        </section>
+
+        <ul class="settings-list asset-hidden">
           <li>
             <span>貨幣</span>
             <div class="settings-currency-control">
@@ -198,9 +241,57 @@
           </li>
         </ul>
 
-        <section class="danger-zone">
+        <section class="danger-zone asset-hidden">
           <button type="button" id="reset-data">清空本機資料</button>
         </section>
+      </section>
+
+      <section class="edit-sheet" id="asset-edit-sheet" aria-label="編輯本月資產" hidden>
+        <div class="edit-card asset-edit-card">
+          <div class="edit-header asset-edit-header">
+            <div>
+              <p class="eyebrow" id="asset-edit-month">本月</p>
+              <h2>編輯本月資產</h2>
+            </div>
+            <button type="button" class="sheet-close" id="asset-edit-close" aria-label="關閉">x</button>
+          </div>
+          <form id="asset-edit-form" class="asset-edit-form">
+            <section>
+              <h3 id="asset-edit-asset-title">資產明細</h3>
+              <label>
+                <span>銀行存款</span>
+                <input type="text" inputmode="numeric" id="asset-input-bank" autocomplete="off" placeholder="0" />
+              </label>
+              <label>
+                <span>台股</span>
+                <input type="text" inputmode="numeric" id="asset-input-twStocks" autocomplete="off" placeholder="0" />
+              </label>
+              <label>
+                <span>美股</span>
+                <input type="text" inputmode="numeric" id="asset-input-usStocks" autocomplete="off" placeholder="0" />
+              </label>
+              <label>
+                <span>基金</span>
+                <input type="text" inputmode="numeric" id="asset-input-funds" autocomplete="off" placeholder="0" />
+              </label>
+            </section>
+            <section>
+              <h3 id="asset-edit-liability-title">負債明細</h3>
+              <label>
+                <span>信用卡未繳款</span>
+                <input type="text" inputmode="numeric" id="asset-input-creditCard" autocomplete="off" placeholder="0" />
+              </label>
+              <label>
+                <span>信貸</span>
+                <input type="text" inputmode="numeric" id="asset-input-loan" autocomplete="off" placeholder="0" />
+              </label>
+            </section>
+            <div class="edit-actions">
+              <button type="button" class="secondary-action" id="asset-edit-cancel">取消</button>
+              <button type="submit">儲存</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <section class="edit-sheet" id="expense-edit-sheet" aria-label="編輯紀錄" hidden>
@@ -257,12 +348,12 @@
           <span>$</span>
           欠款
         </button>
-        <button type="button" data-target="settings" aria-label="設定">
-          <span>*</span>
-          設定
+        <button type="button" data-target="assets" aria-label="資產">
+          <span>◇</span>
+          資產
         </button>
       </nav>
     </main>
-    <script src="script.js?v=24"></script>
+    <script src="script.js?v=25"></script>
   </body>
 </html>

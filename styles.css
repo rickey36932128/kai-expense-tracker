@@ -982,6 +982,318 @@ dd {
   font-weight: 800;
 }
 
+.asset-hidden {
+  display: none;
+}
+
+.asset-screen {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: calc(102px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.asset-screen.active {
+  display: block;
+}
+
+.asset-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.asset-topbar h1 {
+  font-size: 34px;
+}
+
+.asset-topbar button {
+  max-width: 176px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.asset-topbar button.is-empty {
+  background: rgba(110, 110, 115, 0.12);
+  color: var(--muted);
+}
+
+.net-worth-card,
+.asset-panel {
+  border-radius: 22px;
+  background: var(--surface);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
+}
+
+.net-worth-card {
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.net-worth-card summary {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-height: 138px;
+  padding: 18px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.net-worth-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.net-worth-card summary::after {
+  content: "⌵";
+  position: absolute;
+  top: 20px;
+  right: 18px;
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.net-worth-card[open] summary::after {
+  content: "⌃";
+}
+
+.net-worth-card summary span {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.net-worth-card summary strong {
+  display: block;
+  color: var(--text);
+  font-size: 37px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.net-worth-card summary em {
+  width: fit-content;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(52, 199, 89, 0.13);
+  color: var(--green);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.net-worth-card summary em.is-negative {
+  background: rgba(255, 59, 48, 0.12);
+  color: var(--red);
+}
+
+.net-worth-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  border-top: 1px solid var(--line);
+  background: var(--line);
+}
+
+.net-worth-details div {
+  min-width: 0;
+  padding: 14px 16px;
+  background: var(--surface);
+}
+
+.net-worth-details span,
+.asset-section-heading span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.net-worth-details b {
+  display: block;
+  margin-top: 5px;
+  font-size: 18px;
+}
+
+.asset-panel {
+  margin-bottom: 14px;
+  padding: 16px;
+}
+
+.asset-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.asset-section-heading h2 {
+  font-size: 20px;
+}
+
+.asset-trend-chart {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  min-height: 168px;
+  padding-top: 10px;
+}
+
+.asset-trend-point {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.asset-trend-point span {
+  max-width: 52px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  transform: scale(0.88);
+}
+
+.asset-trend-point i {
+  display: block;
+  width: 22px;
+  min-height: 8px;
+  border-radius: 999px 999px 6px 6px;
+  background: linear-gradient(180deg, #34c759, #0a84ff);
+}
+
+.asset-trend-point b {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.asset-detail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.asset-detail-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 48px;
+  border-top: 1px solid var(--line);
+}
+
+.asset-detail-list li:first-child {
+  border-top: 0;
+}
+
+.asset-detail-list span {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.asset-detail-list strong {
+  color: var(--text);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.liability-list strong {
+  color: var(--red);
+}
+
+.asset-edit-card {
+  max-height: min(82vh, 720px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.asset-edit-header {
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.asset-edit-header > div {
+  display: block;
+}
+
+.asset-edit-header h2 {
+  margin-top: 3px;
+}
+
+.asset-edit-form {
+  display: grid;
+  gap: 14px;
+}
+
+.asset-edit-form section {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+
+.asset-edit-form h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.asset-edit-form label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(118px, 42%);
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+
+.asset-edit-form label span {
+  min-width: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.asset-edit-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: 0;
+  padding: 0 11px;
+  background: var(--surface);
+  font-size: 16px;
+  font-weight: 750;
+  text-align: right;
+}
+
+.asset-edit-form input:focus {
+  border-color: rgba(0, 122, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+.asset-edit-form input.is-invalid {
+  border-color: rgba(255, 59, 48, 0.7);
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.12);
+}
+
 .edit-sheet {
   position: fixed;
   inset: 0;

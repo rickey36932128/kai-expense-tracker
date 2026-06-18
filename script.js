@@ -1,10 +1,20 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v23";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v23";
+const APP_VERSION = "v25";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v25";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
 const CURRENCY_OPTIONS = new Set(["TWD", "JPY"]);
+const ASSET_CATEGORIES = [
+  { key: "bank", label: "銀行存款" },
+  { key: "twStocks", label: "台股" },
+  { key: "usStocks", label: "美股" },
+  { key: "funds", label: "基金" },
+];
+const LIABILITY_CATEGORIES = [
+  { key: "creditCard", label: "信用卡未繳款" },
+  { key: "loan", label: "信貸" },
+];
 
 const elements = {};
 let state = loadState();
@@ -27,6 +37,28 @@ function init() {
   elements.debtList = document.querySelector("#debt-list");
   elements.debtTotal = document.querySelector("#debt-total");
   elements.debtCount = document.querySelector("#debt-count");
+  elements.assetMonthAction = document.querySelector("#asset-month-action");
+  elements.netWorthTotal = document.querySelector("#net-worth-total");
+  elements.netWorthChange = document.querySelector("#net-worth-change");
+  elements.assetTotal = document.querySelector("#asset-total");
+  elements.liabilityTotal = document.querySelector("#liability-total");
+  elements.assetDetailTitle = document.querySelector("#asset-detail-title");
+  elements.liabilityDetailTitle = document.querySelector("#liability-detail-title");
+  elements.assetDetailTotal = document.querySelector("#asset-detail-total");
+  elements.liabilityDetailTotal = document.querySelector("#liability-detail-total");
+  elements.assetDetailList = document.querySelector("#asset-detail-list");
+  elements.liabilityDetailList = document.querySelector("#liability-detail-list");
+  elements.assetTrendChart = document.querySelector("#asset-trend-chart");
+  elements.assetEditSheet = document.querySelector("#asset-edit-sheet");
+  elements.assetEditForm = document.querySelector("#asset-edit-form");
+  elements.assetEditClose = document.querySelector("#asset-edit-close");
+  elements.assetEditCancel = document.querySelector("#asset-edit-cancel");
+  elements.assetEditMonth = document.querySelector("#asset-edit-month");
+  elements.assetEditAssetTitle = document.querySelector("#asset-edit-asset-title");
+  elements.assetEditLiabilityTitle = document.querySelector("#asset-edit-liability-title");
+  elements.assetInputs = Object.fromEntries(
+    [...ASSET_CATEGORIES, ...LIABILITY_CATEGORIES].map((category) => [category.key, document.querySelector(`#asset-input-${category.key}`)]),
+  );
   elements.selectedMonthLabel = document.querySelector("#selected-month-label");
   elements.recordsListTitle = document.querySelector("#records-list-title");
   elements.monthBalance = document.querySelector("#month-balance");
@@ -75,6 +107,13 @@ function init() {
   document.querySelector("#next-month").addEventListener("click", () => changeMonth(1));
   document.querySelector("#clear-debts").addEventListener("click", clearDebts);
   document.querySelector("#reset-data").addEventListener("click", resetData);
+  elements.assetMonthAction.addEventListener("click", openAssetEditor);
+  elements.assetEditForm.addEventListener("submit", saveAssetSnapshot);
+  elements.assetEditClose.addEventListener("click", closeAssetEditor);
+  elements.assetEditCancel.addEventListener("click", closeAssetEditor);
+  elements.assetEditSheet.addEventListener("click", (event) => {
+    if (event.target === elements.assetEditSheet) closeAssetEditor();
+  });
   elements.checkUpdate.addEventListener("click", () => checkForUpdates(true));
   elements.appVersion.textContent = APP_VERSION;
   elements.currencyButtons.forEach((button) => {
@@ -124,6 +163,7 @@ function getDefaultState() {
     expenses: [],
     incomes: [],
     debts: [],
+    assetSnapshots: {},
     currency: DEFAULT_CURRENCY,
   };
 }
@@ -191,6 +231,7 @@ function cleanState(value) {
     expenses: value.expenses.filter((expense) => isValidExpense(expense) && !isSeedExpense(expense)).map(normalizeMoneyItem),
     incomes: Array.isArray(value.incomes) ? value.incomes.filter(isValidMoneyItem).map(normalizeMoneyItem) : [],
     debts: value.debts.filter((debt) => isValidDebt(debt) && !isSeedDebt(debt)).map(normalizeMoneyItem),
+    assetSnapshots: normalizeAssetSnapshots(value.assetSnapshots),
     currency: CURRENCY_OPTIONS.has(value.currency) ? value.currency : DEFAULT_CURRENCY,
   };
 }
@@ -200,6 +241,34 @@ function normalizeMoneyItem(item) {
     ...item,
     currency: CURRENCY_OPTIONS.has(item.currency) ? item.currency : DEFAULT_CURRENCY,
   };
+}
+
+function normalizeAssetSnapshots(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([month, snapshot]) => /^\d{4}-\d{2}$/.test(month) && snapshot && typeof snapshot === "object")
+      .map(([month, snapshot]) => [
+        month,
+        {
+          updatedAt: typeof snapshot.updatedAt === "string" ? snapshot.updatedAt : "",
+          assets: normalizeAssetGroup(snapshot.assets, ASSET_CATEGORIES),
+          liabilities: normalizeAssetGroup(snapshot.liabilities, LIABILITY_CATEGORIES),
+        },
+      ]),
+  );
+}
+
+function normalizeAssetGroup(value, categories) {
+  const source = value && typeof value === "object" ? value : {};
+
+  return Object.fromEntries(
+    categories.map((category) => {
+      const amount = Number(source[category.key]);
+      return [category.key, Number.isFinite(amount) && amount > 0 ? amount : 0];
+    }),
+  );
 }
 
 function isValidExpense(expense) {
@@ -661,6 +730,7 @@ function render() {
   if (elements.recentList) renderTransactionList(elements.recentList, recentTransactions, "目前沒有紀錄");
   renderCategoryAnalysis(selectedAnalysisItems, activeAnalysisType);
   renderDebtList(currencyDebts);
+  renderAssets(currency);
 }
 
 function sumAmounts(items) {
@@ -847,6 +917,190 @@ function renderCategorySummary(groups, type, total) {
 function getChartColor(index) {
   const colors = ["#0a84ff", "#12bfa4", "#ffbe2e", "#af52de", "#ff6b3a", "#34c759"];
   return colors[index % colors.length];
+}
+
+function renderAssets(currency) {
+  if (!elements.netWorthTotal) return;
+
+  const monthKey = getMonthKey(new Date());
+  const previousKey = getOffsetMonthKey(new Date(), -1);
+  const snapshot = getAssetSnapshot(monthKey);
+  const previousSnapshot = getAssetSnapshot(previousKey);
+  const hasCurrentSnapshot = Boolean(state.assetSnapshots?.[monthKey]);
+  const assetTotal = sumAssetGroup(snapshot.assets);
+  const liabilityTotal = sumAssetGroup(snapshot.liabilities);
+  const netWorth = assetTotal - liabilityTotal;
+  const previousNetWorth = sumAssetGroup(previousSnapshot.assets) - sumAssetGroup(previousSnapshot.liabilities);
+  const change = netWorth - previousNetWorth;
+  const changePercent = previousNetWorth ? (change / Math.abs(previousNetWorth)) * 100 : 0;
+  const monthLabel = formatMonthHeading(monthKey);
+
+  elements.assetMonthAction.textContent = hasCurrentSnapshot ? "編輯本月資產" : "本月資產尚未更新";
+  elements.assetMonthAction.classList.toggle("is-empty", !hasCurrentSnapshot);
+  elements.assetDetailTitle.textContent = `${monthLabel}資產明細`;
+  elements.liabilityDetailTitle.textContent = `${monthLabel}負債明細`;
+  elements.netWorthTotal.textContent = formatMoney(netWorth, currency);
+  elements.netWorthChange.textContent = formatNetWorthChange(change, changePercent, currency);
+  elements.netWorthChange.classList.toggle("is-negative", change < 0);
+  elements.assetTotal.textContent = formatMoney(assetTotal, currency);
+  elements.liabilityTotal.textContent = formatMoney(liabilityTotal, currency);
+  elements.assetDetailTotal.textContent = formatMoney(assetTotal, currency);
+  elements.liabilityDetailTotal.textContent = formatMoney(liabilityTotal, currency);
+
+  renderAssetDetails(elements.assetDetailList, snapshot.assets, ASSET_CATEGORIES, currency);
+  renderAssetDetails(elements.liabilityDetailList, snapshot.liabilities, LIABILITY_CATEGORIES, currency);
+  renderAssetTrend(currency);
+}
+
+function openAssetEditor() {
+  const monthKey = getMonthKey(new Date());
+  const monthLabel = formatMonthHeading(monthKey);
+  const snapshot = getAssetSnapshot(monthKey);
+
+  elements.assetEditMonth.textContent = monthLabel;
+  elements.assetEditAssetTitle.textContent = `${monthLabel}資產明細`;
+  elements.assetEditLiabilityTitle.textContent = `${monthLabel}負債明細`;
+  fillAssetInputs(snapshot.assets);
+  fillAssetInputs(snapshot.liabilities);
+  elements.assetEditSheet.hidden = false;
+  elements.assetInputs.bank.focus();
+}
+
+function closeAssetEditor() {
+  elements.assetEditSheet.hidden = true;
+  elements.assetEditForm.reset();
+}
+
+function saveAssetSnapshot(event) {
+  event.preventDefault();
+  const monthKey = getMonthKey(new Date());
+  const assets = readAssetInputs(ASSET_CATEGORIES);
+  const liabilities = readAssetInputs(LIABILITY_CATEGORIES);
+
+  if (!assets || !liabilities) return;
+
+  state.assetSnapshots = {
+    ...state.assetSnapshots,
+    [monthKey]: {
+      assets,
+      liabilities,
+      updatedAt: new Date().toISOString(),
+    },
+  };
+  saveState();
+  closeAssetEditor();
+  render();
+}
+
+function fillAssetInputs(values) {
+  Object.entries(values).forEach(([key, amount]) => {
+    const input = elements.assetInputs[key];
+    if (!input) return;
+    input.value = amount > 0 ? Number(amount).toLocaleString("en-US") : "";
+  });
+}
+
+function readAssetInputs(categories) {
+  const values = {};
+
+  for (const category of categories) {
+    const input = elements.assetInputs[category.key];
+    const amount = parseNonNegativeAmountInput(input.value);
+    if (amount === null) {
+      input.focus();
+      input.classList.add("is-invalid");
+      window.setTimeout(() => input.classList.remove("is-invalid"), 500);
+      return null;
+    }
+    values[category.key] = amount;
+  }
+
+  return values;
+}
+
+function parseNonNegativeAmountInput(value) {
+  const text = String(value || "").replaceAll(",", "").trim();
+  if (!text) return 0;
+
+  const amount = Number(text);
+  if (!Number.isFinite(amount) || amount < 0) return null;
+  return Math.round(amount);
+}
+
+function getAssetSnapshot(monthKey) {
+  const snapshot = state.assetSnapshots?.[monthKey];
+  return {
+    assets: normalizeAssetGroup(snapshot?.assets, ASSET_CATEGORIES),
+    liabilities: normalizeAssetGroup(snapshot?.liabilities, LIABILITY_CATEGORIES),
+  };
+}
+
+function sumAssetGroup(group) {
+  return Object.values(group).reduce((sum, amount) => sum + Number(amount), 0);
+}
+
+function formatNetWorthChange(amount, percent, currency) {
+  const sign = amount > 0 ? "+" : amount < 0 ? "-" : "";
+  const percentSign = percent > 0 ? "+" : percent < 0 ? "-" : "";
+  return `較上月 ${sign}${formatMoney(Math.abs(amount), currency)} ${percentSign}${Math.abs(percent).toFixed(1)}%`;
+}
+
+function renderAssetDetails(target, values, categories, currency) {
+  target.innerHTML = categories
+    .map(
+      (category) => `
+        <li>
+          <span>${escapeHtml(category.label)}</span>
+          <strong>${formatMoney(values[category.key] || 0, currency)}</strong>
+        </li>
+      `,
+    )
+    .join("");
+}
+
+function renderAssetTrend(currency) {
+  const monthKeys = getRecentMonthKeys(6);
+  const points = monthKeys.map((month) => {
+    const snapshot = getAssetSnapshot(month);
+    return {
+      month,
+      netWorth: sumAssetGroup(snapshot.assets) - sumAssetGroup(snapshot.liabilities),
+    };
+  });
+  const max = Math.max(...points.map((point) => Math.abs(point.netWorth)), 1);
+
+  elements.assetTrendChart.innerHTML = points
+    .map((point) => {
+      const height = Math.max(8, Math.round((Math.abs(point.netWorth) / max) * 110));
+      return `
+        <div class="asset-trend-point">
+          <span>${formatMoney(point.netWorth, currency)}</span>
+          <i style="height:${height}px"></i>
+          <b>${formatTrendMonthLabel(point.month)}</b>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function getRecentMonthKeys(count) {
+  return Array.from({ length: count }, (_, index) => getOffsetMonthKey(new Date(), index - count + 1));
+}
+
+function getOffsetMonthKey(value, offset) {
+  const date = new Date(value);
+  date.setMonth(date.getMonth() + offset);
+  return getMonthKey(date);
+}
+
+function formatTrendMonthLabel(monthKey) {
+  const [, month] = monthKey.split("-");
+  return `${Number(month)}月`;
+}
+
+function formatMonthHeading(monthKey) {
+  const [, month] = monthKey.split("-");
+  return `${Number(month)}月`;
 }
 
 function renderDebtList(debts) {
