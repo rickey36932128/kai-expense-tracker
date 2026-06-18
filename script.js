@@ -1,6 +1,6 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v28";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v28";
+const APP_VERSION = "v29";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v29";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -120,6 +120,7 @@ function init() {
   elements.splitShareList = document.querySelector("#split-share-list");
   elements.splitSelectAll = document.querySelector("#split-select-all");
   elements.splitClearAll = document.querySelector("#split-clear-all");
+  elements.splitClearSettlement = document.querySelector("#split-clear-settlement");
   elements.splitCurrentEvent = document.querySelector("#split-current-event");
   elements.splitSettlementTitle = document.querySelector("#split-settlement-title");
   elements.splitTotal = document.querySelector("#split-total");
@@ -164,6 +165,7 @@ function init() {
   });
   elements.splitSelectAll.addEventListener("click", () => setSplitShareSelection(true));
   elements.splitClearAll.addEventListener("click", () => setSplitShareSelection(false));
+  elements.splitClearSettlement.addEventListener("click", clearSplitSettlement);
   document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
   document.querySelector("#next-month").addEventListener("click", () => changeMonth(1));
   document.querySelector("#clear-debts").addEventListener("click", clearDebts);
@@ -1360,6 +1362,12 @@ function renderSplitPaidList(paid) {
       `,
     )
     .join("");
+}
+
+function clearSplitSettlement() {
+  state.splitBill.expenses = [];
+  saveState();
+  renderSplitBill();
 }
 
 function renderSplitSuggestions(suggestions) {

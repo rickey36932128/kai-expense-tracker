@@ -1279,6 +1279,23 @@ dd {
   font-size: 20px;
 }
 
+.split-settlement-title-row h2 {
+  min-width: 0;
+  flex: 1;
+}
+
+.split-clear-settlement {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 59, 48, 0.12);
+  color: #ff3b30;
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .split-section-title span,
 .split-participants-head span {
   color: var(--muted);
