@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-title" content="蛋黃小帳" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>蛋黃小帳</title>
-    <link rel="manifest" href="manifest.webmanifest?v=27" />
+    <link rel="manifest" href="manifest.webmanifest?v=28" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=27" />
+    <link rel="stylesheet" href="styles.css?v=28" />
   </head>
   <body>
     <main class="phone-shell" aria-label="蛋黃小帳 App">
@@ -246,6 +246,90 @@
         </section>
       </section>
 
+      <section class="screen split-screen" data-screen="split">
+        <header class="top-bar split-topbar">
+          <div>
+            <p class="eyebrow">多人分帳</p>
+            <h1>分帳</h1>
+          </div>
+          <strong id="split-expense-count">0 筆</strong>
+        </header>
+
+        <section class="split-card">
+          <div class="split-section-title">
+            <h2>建立活動</h2>
+            <span id="split-people-count">4 人</span>
+          </div>
+          <label class="split-field">
+            <span>活動名稱</span>
+            <input id="split-event-name" type="text" value="台中兩天一夜" autocomplete="off" />
+          </label>
+          <div class="split-people-list" id="split-people-list"></div>
+          <button class="split-add-person" type="button" id="split-add-person">增加參與人</button>
+        </section>
+
+        <section class="split-card">
+          <div class="split-section-title">
+            <h2>新增花費</h2>
+            <span id="split-current-event">台中兩天一夜</span>
+          </div>
+          <form id="split-expense-form" class="split-expense-form">
+            <label class="split-field">
+              <span>項目名稱</span>
+              <input id="split-expense-title" type="text" placeholder="晚餐" autocomplete="off" required />
+            </label>
+            <label class="split-field">
+              <span>金額</span>
+              <input id="split-expense-amount" type="text" inputmode="numeric" placeholder="2400" autocomplete="off" required />
+            </label>
+            <label class="split-field">
+              <span>付款人</span>
+              <select id="split-expense-payer"></select>
+            </label>
+            <div class="split-methods" aria-label="分攤方式">
+              <label><input type="radio" name="split-method" value="equal" checked /> 平均分攤</label>
+              <label><input type="radio" name="split-method" value="amount" /> 自訂金額</label>
+              <label><input type="radio" name="split-method" value="ratio" /> 自訂比例</label>
+            </div>
+            <div class="split-participants-head">
+              <span>參與分攤的人</span>
+              <div>
+                <button type="button" id="split-select-all">全選</button>
+                <button type="button" id="split-clear-all">清除</button>
+              </div>
+            </div>
+            <div class="split-share-list" id="split-share-list"></div>
+            <label class="split-field">
+              <span>備註</span>
+              <input id="split-expense-note" type="text" placeholder="可不填" autocomplete="off" />
+            </label>
+            <button class="split-submit" type="submit">新增花費</button>
+          </form>
+        </section>
+
+        <section class="split-card split-settlement-card">
+          <div class="split-section-title">
+            <h2 id="split-settlement-title">台中兩天一夜</h2>
+            <span>結算</span>
+          </div>
+          <div class="split-summary-grid">
+            <div>
+              <span>總花費</span>
+              <strong id="split-total">$0</strong>
+            </div>
+            <div>
+              <span>平均每人</span>
+              <strong id="split-average">$0</strong>
+            </div>
+          </div>
+          <ul class="split-paid-list" id="split-paid-list"></ul>
+          <div class="split-suggestions">
+            <h3>結算建議</h3>
+            <ul id="split-suggestion-list"></ul>
+          </div>
+        </section>
+      </section>
+
       <section class="edit-sheet" id="asset-edit-sheet" aria-label="編輯本月資產" hidden>
         <div class="edit-card asset-edit-card">
           <div class="edit-header asset-edit-header">
@@ -344,16 +428,20 @@
           <span>#</span>
           紀錄
         </button>
-        <button type="button" data-target="debts" aria-label="欠款">
-          <span>$</span>
-          欠款
-        </button>
         <button type="button" data-target="assets" aria-label="資產">
           <span>◇</span>
           資產
         </button>
+        <button type="button" data-target="split" aria-label="分帳">
+          <span>÷</span>
+          分帳
+        </button>
+        <button type="button" data-target="debts" aria-label="欠款">
+          <span>$</span>
+          欠款
+        </button>
       </nav>
     </main>
-    <script src="script.js?v=27"></script>
+    <script src="script.js?v=28"></script>
   </body>
 </html>

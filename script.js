@@ -1,6 +1,6 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v27";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v27";
+const APP_VERSION = "v28";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v28";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -54,6 +54,7 @@ let activeEntryType = "expense";
 let activeAnalysisType = "expense";
 let refreshingForUpdate = false;
 let updateStatusTimer = 0;
+let splitPersonDraftId = 5;
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -106,6 +107,25 @@ function init() {
   elements.expenseForm = document.querySelector("#expense-form");
   elements.expenseInput = document.querySelector("#expense-input");
   elements.debtForm = document.querySelector("#debt-form");
+  elements.splitEventName = document.querySelector("#split-event-name");
+  elements.splitPeopleCount = document.querySelector("#split-people-count");
+  elements.splitExpenseCount = document.querySelector("#split-expense-count");
+  elements.splitPeopleList = document.querySelector("#split-people-list");
+  elements.splitAddPerson = document.querySelector("#split-add-person");
+  elements.splitExpenseForm = document.querySelector("#split-expense-form");
+  elements.splitExpenseTitle = document.querySelector("#split-expense-title");
+  elements.splitExpenseAmount = document.querySelector("#split-expense-amount");
+  elements.splitExpensePayer = document.querySelector("#split-expense-payer");
+  elements.splitExpenseNote = document.querySelector("#split-expense-note");
+  elements.splitShareList = document.querySelector("#split-share-list");
+  elements.splitSelectAll = document.querySelector("#split-select-all");
+  elements.splitClearAll = document.querySelector("#split-clear-all");
+  elements.splitCurrentEvent = document.querySelector("#split-current-event");
+  elements.splitSettlementTitle = document.querySelector("#split-settlement-title");
+  elements.splitTotal = document.querySelector("#split-total");
+  elements.splitAverage = document.querySelector("#split-average");
+  elements.splitPaidList = document.querySelector("#split-paid-list");
+  elements.splitSuggestionList = document.querySelector("#split-suggestion-list");
   elements.updateStatus = document.querySelector("#update-status");
   elements.updateStatusText = document.querySelector("#update-status-text");
   elements.checkUpdate = document.querySelector("#check-update");
@@ -134,6 +154,16 @@ function init() {
   elements.expenseForm.addEventListener("submit", addExpenseFromText);
   elements.expenseInput.addEventListener("keydown", handleExpenseInputKeydown);
   elements.debtForm.addEventListener("submit", addDebtFromForm);
+  elements.splitEventName.addEventListener("input", updateSplitEventName);
+  elements.splitAddPerson.addEventListener("click", addSplitPerson);
+  elements.splitPeopleList.addEventListener("change", handleSplitPersonInput);
+  elements.splitPeopleList.addEventListener("click", handleSplitPersonRemove);
+  elements.splitExpenseForm.addEventListener("submit", addSplitExpense);
+  document.querySelectorAll("input[name='split-method']").forEach((input) => {
+    input.addEventListener("change", renderSplitShareList);
+  });
+  elements.splitSelectAll.addEventListener("click", () => setSplitShareSelection(true));
+  elements.splitClearAll.addEventListener("click", () => setSplitShareSelection(false));
   document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
   document.querySelector("#next-month").addEventListener("click", () => changeMonth(1));
   document.querySelector("#clear-debts").addEventListener("click", clearDebts);
@@ -195,7 +225,53 @@ function getDefaultState() {
     incomes: [],
     debts: [],
     assetSnapshots: {},
+    splitBill: getDefaultSplitBill(),
     currency: DEFAULT_CURRENCY,
+  };
+}
+
+function getDefaultSplitBill() {
+  return {
+    eventName: "台中兩天一夜",
+    people: ["A", "B", "C", "D"],
+    expenses: [
+      {
+        id: "demo-dinner",
+        title: "晚餐",
+        amount: 2400,
+        payer: "A",
+        method: "equal",
+        participants: ["A", "B", "C"],
+        note: "",
+      },
+      {
+        id: "demo-hotel",
+        title: "住宿",
+        amount: 2600,
+        payer: "C",
+        method: "equal",
+        participants: ["A", "B", "C", "D"],
+        note: "",
+      },
+      {
+        id: "demo-ticket",
+        title: "車票",
+        amount: 2000,
+        payer: "B",
+        method: "equal",
+        participants: ["A", "B", "C", "D"],
+        note: "",
+      },
+      {
+        id: "demo-rental",
+        title: "租車",
+        amount: 1600,
+        payer: "A",
+        method: "equal",
+        participants: ["A", "B", "C", "D"],
+        note: "",
+      },
+    ],
   };
 }
 
@@ -263,6 +339,7 @@ function cleanState(value) {
     incomes: Array.isArray(value.incomes) ? value.incomes.filter(isValidMoneyItem).map(normalizeMoneyItem) : [],
     debts: value.debts.filter((debt) => isValidDebt(debt) && !isSeedDebt(debt)).map(normalizeMoneyItem),
     assetSnapshots: normalizeAssetSnapshots(value.assetSnapshots),
+    splitBill: normalizeSplitBill(value.splitBill),
     currency: CURRENCY_OPTIONS.has(value.currency) ? value.currency : DEFAULT_CURRENCY,
   };
 }
@@ -315,6 +392,62 @@ function normalizeAssetGroup(value, categories) {
     categories.map((category) => {
       const amount = Number(source[category.key]);
       return [category.key, Number.isFinite(amount) && amount > 0 ? amount : 0];
+    }),
+  );
+}
+
+function normalizeSplitBill(value) {
+  const fallback = getDefaultSplitBill();
+  if (!value || typeof value !== "object") return fallback;
+
+  const people = Array.isArray(value.people)
+    ? value.people.map((person) => String(person || "").trim()).filter(Boolean).slice(0, 12)
+    : fallback.people;
+  const safePeople = people.length ? Array.from(new Set(people)) : fallback.people;
+  const expenses = Array.isArray(value.expenses)
+    ? value.expenses
+        .map((expense) => normalizeSplitExpense(expense, safePeople))
+        .filter(Boolean)
+    : fallback.expenses;
+
+  return {
+    eventName: String(value.eventName || fallback.eventName).trim() || fallback.eventName,
+    people: safePeople,
+    expenses,
+  };
+}
+
+function normalizeSplitExpense(expense, people) {
+  if (!expense || typeof expense !== "object") return null;
+
+  const title = String(expense.title || "").trim();
+  const amount = Number(expense.amount);
+  const payer = people.includes(expense.payer) ? expense.payer : people[0];
+  const participants = Array.isArray(expense.participants)
+    ? expense.participants.filter((person) => people.includes(person))
+    : people;
+
+  if (!title || !Number.isFinite(amount) || amount <= 0 || !payer || !participants.length) return null;
+
+  return {
+    id: typeof expense.id === "string" ? expense.id : createId(),
+    title,
+    amount: Math.round(amount),
+    payer,
+    method: ["equal", "amount", "ratio"].includes(expense.method) ? expense.method : "equal",
+    participants,
+    customShares: normalizeSplitCustomShares(expense.customShares, people),
+    note: typeof expense.note === "string" ? expense.note : "",
+  };
+}
+
+function normalizeSplitCustomShares(value, people) {
+  const source = value && typeof value === "object" ? value : {};
+
+  return Object.fromEntries(
+    people.map((person) => {
+      const amount = Number(source[person]);
+      return [person, Number.isFinite(amount) && amount > 0 ? amount : 0];
     }),
   );
 }
@@ -780,6 +913,7 @@ function render() {
   renderCategoryAnalysis(selectedAnalysisItems, activeAnalysisType);
   renderDebtList(currencyDebts);
   renderAssets(currency);
+  renderSplitBill();
 }
 
 function sumAmounts(items) {
@@ -1150,6 +1284,305 @@ function formatTrendMonthLabel(monthKey) {
 function formatMonthHeading(monthKey) {
   const [, month] = monthKey.split("-");
   return `${Number(month)}月`;
+}
+
+function renderSplitBill() {
+  if (!elements.splitEventName) return;
+
+  const splitBill = state.splitBill;
+  const settlement = calculateSplitSettlement(splitBill);
+
+  elements.splitEventName.value = splitBill.eventName;
+  elements.splitPeopleCount.textContent = `${splitBill.people.length} 人`;
+  elements.splitExpenseCount.textContent = `${splitBill.expenses.length} 筆`;
+  elements.splitCurrentEvent.textContent = splitBill.eventName;
+  elements.splitSettlementTitle.textContent = splitBill.eventName;
+  elements.splitTotal.textContent = formatSplitMoney(settlement.total);
+  elements.splitAverage.textContent = splitBill.people.length ? formatSplitMoney(Math.round(settlement.total / splitBill.people.length)) : "$0";
+
+  renderSplitPeople();
+  renderSplitPayerOptions();
+  renderSplitShareList();
+  renderSplitPaidList(settlement.paid);
+  renderSplitSuggestions(settlement.suggestions);
+}
+
+function renderSplitPeople() {
+  elements.splitPeopleList.innerHTML = state.splitBill.people
+    .map(
+      (person, index) => `
+        <label class="split-person-row">
+          <span>${index + 1}</span>
+          <input type="text" value="${escapeHtml(person)}" data-split-person-index="${index}" aria-label="參與人 ${index + 1}" />
+          <button type="button" data-remove-split-person="${index}" aria-label="移除 ${escapeHtml(person)}">x</button>
+        </label>
+      `,
+    )
+    .join("");
+}
+
+function renderSplitPayerOptions() {
+  const people = state.splitBill.people;
+  const current = elements.splitExpensePayer.value || people[0] || "";
+  elements.splitExpensePayer.innerHTML = people.map((person) => `<option value="${escapeHtml(person)}">${escapeHtml(person)}</option>`).join("");
+  elements.splitExpensePayer.value = people.includes(current) ? current : people[0] || "";
+}
+
+function renderSplitShareList() {
+  const checkedPeople = new Set(state.splitBill.people);
+  const method = getSelectedSplitMethod();
+  const inputPlaceholder = method === "ratio" ? "比例" : "金額";
+  elements.splitShareList.classList.toggle("has-custom-shares", method !== "equal");
+
+  elements.splitShareList.innerHTML = state.splitBill.people
+    .map(
+      (person) => `
+        <label class="${method === "equal" ? "" : "has-custom-share"}">
+          <span>
+            <input type="checkbox" value="${escapeHtml(person)}" ${checkedPeople.has(person) ? "checked" : ""} />
+            ${escapeHtml(person)}
+          </span>
+          ${method === "equal" ? "" : `<input class="split-custom-share" type="text" inputmode="numeric" data-split-share-value="${escapeHtml(person)}" placeholder="${inputPlaceholder}" />`}
+        </label>
+      `,
+    )
+    .join("");
+}
+
+function renderSplitPaidList(paid) {
+  elements.splitPaidList.innerHTML = state.splitBill.people
+    .map(
+      (person) => `
+        <li>
+          <span>${escapeHtml(person)} 已付</span>
+          <strong>${formatSplitMoney(paid[person] || 0)}</strong>
+        </li>
+      `,
+    )
+    .join("");
+}
+
+function renderSplitSuggestions(suggestions) {
+  if (!suggestions.length) {
+    elements.splitSuggestionList.innerHTML = `<li class="empty-state">目前不需要結算</li>`;
+    return;
+  }
+
+  elements.splitSuggestionList.innerHTML = suggestions
+    .map(
+      (suggestion) => `
+        <li>
+          <span>${escapeHtml(suggestion.from)} 給 ${escapeHtml(suggestion.to)}</span>
+          <strong>${formatSplitMoney(suggestion.amount)}</strong>
+        </li>
+      `,
+    )
+    .join("");
+}
+
+function updateSplitEventName() {
+  state.splitBill.eventName = elements.splitEventName.value.trim() || "未命名活動";
+  saveState();
+  renderSplitBill();
+}
+
+function addSplitPerson() {
+  const name = getNextSplitPersonName();
+  state.splitBill.people.push(name);
+  saveState();
+  renderSplitBill();
+}
+
+function getNextSplitPersonName() {
+  while (state.splitBill.people.includes(String.fromCharCode(64 + splitPersonDraftId))) {
+    splitPersonDraftId += 1;
+  }
+
+  if (splitPersonDraftId <= 26) {
+    const name = String.fromCharCode(64 + splitPersonDraftId);
+    splitPersonDraftId += 1;
+    return name;
+  }
+
+  return `成員${state.splitBill.people.length + 1}`;
+}
+
+function handleSplitPersonInput(event) {
+  const input = event.target.closest("[data-split-person-index]");
+  if (!input) return;
+
+  const index = Number(input.dataset.splitPersonIndex);
+  const previousName = state.splitBill.people[index];
+  const nextName = input.value.trim();
+  if (!previousName || !nextName) {
+    renderSplitBill();
+    return;
+  }
+
+  if (state.splitBill.people.includes(nextName) && nextName !== previousName) {
+    input.value = previousName;
+    return;
+  }
+
+  state.splitBill.people[index] = nextName;
+  state.splitBill.expenses = state.splitBill.expenses.map((expense) => ({
+    ...expense,
+    payer: expense.payer === previousName ? nextName : expense.payer,
+    participants: expense.participants.map((person) => (person === previousName ? nextName : person)),
+  }));
+  saveState();
+  renderSplitBill();
+}
+
+function handleSplitPersonRemove(event) {
+  const button = event.target.closest("[data-remove-split-person]");
+  if (!button || state.splitBill.people.length <= 1) return;
+
+  const index = Number(button.dataset.removeSplitPerson);
+  const person = state.splitBill.people[index];
+  state.splitBill.people.splice(index, 1);
+  state.splitBill.expenses = state.splitBill.expenses
+    .map((expense) => ({
+      ...expense,
+      payer: expense.payer === person ? state.splitBill.people[0] : expense.payer,
+      participants: expense.participants.filter((participant) => participant !== person),
+    }))
+    .filter((expense) => expense.payer && expense.participants.length);
+  saveState();
+  renderSplitBill();
+}
+
+function addSplitExpense(event) {
+  event.preventDefault();
+
+  const title = elements.splitExpenseTitle.value.trim();
+  const amount = parseAmountInput(elements.splitExpenseAmount.value);
+  const payer = elements.splitExpensePayer.value;
+  const method = getSelectedSplitMethod();
+  const participants = getSelectedSplitParticipants();
+  const customShares = readSplitCustomShares(participants, method);
+
+  if (!title || amount === null || !payer || !participants.length || customShares === null) {
+    elements.splitExpenseTitle.focus();
+    return;
+  }
+
+  state.splitBill.expenses.unshift({
+    id: createId(),
+    title,
+    amount,
+    payer,
+    method,
+    participants,
+    customShares,
+    note: elements.splitExpenseNote.value.trim(),
+  });
+  saveState();
+  elements.splitExpenseForm.reset();
+  renderSplitBill();
+}
+
+function getSelectedSplitParticipants() {
+  return [...elements.splitShareList.querySelectorAll("input:checked")].map((input) => input.value);
+}
+
+function getSelectedSplitMethod() {
+  return document.querySelector("input[name='split-method']:checked")?.value || "equal";
+}
+
+function readSplitCustomShares(participants, method) {
+  if (method === "equal") return {};
+
+  const values = {};
+  for (const person of participants) {
+    const input = [...elements.splitShareList.querySelectorAll("[data-split-share-value]")].find((field) => field.dataset.splitShareValue === person);
+    const amount = parseNonNegativeAmountInput(input?.value);
+    if (!input || amount === null || amount <= 0) {
+      input?.focus();
+      input?.classList.add("is-invalid");
+      window.setTimeout(() => input?.classList.remove("is-invalid"), 500);
+      return null;
+    }
+    values[person] = amount;
+  }
+
+  return values;
+}
+
+function setSplitShareSelection(checked) {
+  elements.splitShareList.querySelectorAll("input").forEach((input) => {
+    input.checked = checked;
+  });
+}
+
+function calculateSplitSettlement(splitBill) {
+  const paid = Object.fromEntries(splitBill.people.map((person) => [person, 0]));
+  const owed = Object.fromEntries(splitBill.people.map((person) => [person, 0]));
+  const total = splitBill.expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+
+  splitBill.expenses.forEach((expense) => {
+    const amount = Number(expense.amount);
+    const participants = expense.participants.filter((person) => splitBill.people.includes(person));
+    if (!paid[expense.payer] && paid[expense.payer] !== 0) paid[expense.payer] = 0;
+    paid[expense.payer] += amount;
+    if (!participants.length) return;
+
+    const shares = getSplitExpenseShares(expense, participants, amount);
+    Object.entries(shares).forEach(([person, share]) => {
+      owed[person] += share;
+    });
+  });
+
+  const balances = splitBill.people.map((person) => ({
+    person,
+    amount: Math.round((paid[person] || 0) - (owed[person] || 0)),
+  }));
+  const creditors = balances.filter((item) => item.amount > 0).sort((a, b) => b.amount - a.amount);
+  const debtors = balances
+    .filter((item) => item.amount < 0)
+    .map((item) => ({ person: item.person, amount: Math.abs(item.amount) }))
+    .sort((a, b) => b.amount - a.amount);
+  const suggestions = [];
+
+  let debtorIndex = 0;
+  let creditorIndex = 0;
+  while (debtors[debtorIndex] && creditors[creditorIndex]) {
+    const amount = Math.min(debtors[debtorIndex].amount, creditors[creditorIndex].amount);
+    if (amount > 0) {
+      suggestions.push({
+        from: debtors[debtorIndex].person,
+        to: creditors[creditorIndex].person,
+        amount,
+      });
+    }
+
+    debtors[debtorIndex].amount -= amount;
+    creditors[creditorIndex].amount -= amount;
+    if (debtors[debtorIndex].amount <= 0) debtorIndex += 1;
+    if (creditors[creditorIndex].amount <= 0) creditorIndex += 1;
+  }
+
+  return { total, paid, owed, suggestions };
+}
+
+function getSplitExpenseShares(expense, participants, amount) {
+  if (expense.method === "amount") {
+    return Object.fromEntries(participants.map((person) => [person, Number(expense.customShares?.[person]) || 0]));
+  }
+
+  if (expense.method === "ratio") {
+    const totalRatio = participants.reduce((sum, person) => sum + (Number(expense.customShares?.[person]) || 0), 0);
+    if (totalRatio > 0) {
+      return Object.fromEntries(participants.map((person) => [person, amount * ((Number(expense.customShares?.[person]) || 0) / totalRatio)]));
+    }
+  }
+
+  const share = amount / participants.length;
+  return Object.fromEntries(participants.map((person) => [person, share]));
+}
+
+function formatSplitMoney(amount) {
+  return `$${Math.round(Number(amount) || 0).toLocaleString("en-US")}`;
 }
 
 function renderDebtList(debts) {

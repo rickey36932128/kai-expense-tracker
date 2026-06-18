@@ -34,7 +34,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
   touch-action: manipulation;
 }
@@ -1229,6 +1230,306 @@ dd {
   color: var(--red);
 }
 
+.split-screen {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: calc(102px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.split-screen.active {
+  display: block;
+}
+
+.split-topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.split-topbar strong {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--blue);
+  font-size: 13px;
+}
+
+.split-card {
+  padding: 16px;
+  margin-bottom: 14px;
+  border-radius: 22px;
+  background: var(--surface);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
+}
+
+.split-section-title,
+.split-participants-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.split-section-title h2 {
+  font-size: 20px;
+}
+
+.split-section-title span,
+.split-participants-head span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.split-field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.split-field span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.split-field input,
+.split-field select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  outline: 0;
+  padding: 0 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.split-field input:focus,
+.split-field select:focus {
+  border-color: rgba(0, 122, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+.split-people-list,
+.split-share-list,
+.split-paid-list,
+.split-suggestions ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.split-person-row,
+.split-share-list label,
+.split-paid-list li,
+.split-suggestions li {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 8px 10px;
+  border-radius: 13px;
+  background: var(--surface-2);
+}
+
+.split-person-row {
+  grid-template-columns: 24px minmax(0, 1fr) 30px;
+}
+
+.split-person-row span {
+  color: var(--muted);
+  font-weight: 800;
+  text-align: center;
+}
+
+.split-person-row input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.split-person-row button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--red);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.split-add-person,
+.split-submit {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 14px;
+  font-weight: 850;
+}
+
+.split-add-person {
+  margin-top: 10px;
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--blue);
+}
+
+.split-expense-form {
+  display: grid;
+}
+
+.split-methods {
+  display: grid;
+  gap: 8px;
+  margin: 2px 0 14px;
+}
+
+.split-methods label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.split-methods input,
+.split-share-list input {
+  accent-color: var(--green);
+}
+
+.split-participants-head button {
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(0, 122, 255, 0.1);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.split-share-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.split-share-list.has-custom-shares {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.split-share-list label {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  font-weight: 850;
+}
+
+.split-share-list label.has-custom-share {
+  display: grid;
+  grid-template-columns: minmax(0, 44px) minmax(0, 1fr);
+  justify-content: stretch;
+}
+
+.split-share-list label > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.split-custom-share {
+  min-width: 0;
+  width: 100%;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: 0;
+  padding: 0 8px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.split-custom-share:focus {
+  border-color: rgba(0, 122, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+.split-custom-share.is-invalid {
+  border-color: rgba(255, 59, 48, 0.7);
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.12);
+}
+
+.split-submit {
+  margin-top: 2px;
+  background: var(--green);
+  color: white;
+}
+
+.split-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.split-summary-grid div {
+  padding: 13px;
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+
+.split-summary-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.split-summary-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 21px;
+}
+
+.split-paid-list,
+.split-suggestions ul {
+  margin-top: 8px;
+}
+
+.split-paid-list li,
+.split-suggestions li {
+  grid-template-columns: minmax(0, 1fr) auto;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.split-paid-list strong,
+.split-suggestions strong {
+  white-space: nowrap;
+}
+
+.split-suggestions {
+  margin-top: 14px;
+}
+
+.split-suggestions h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
 .asset-edit-card {
   max-height: min(82vh, 720px);
   overflow-y: auto;
@@ -1578,7 +1879,7 @@ dd {
   right: 0;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   height: calc(70px + env(safe-area-inset-bottom));
   padding: 7px 6px calc(10px + env(safe-area-inset-bottom));
   border-top: 1px solid rgba(0, 0, 0, 0.08);
@@ -1594,13 +1895,13 @@ dd {
   gap: 2px;
   min-width: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
 }
 
 .tab-bar span {
   min-height: 22px;
-  font-size: 21px;
+  font-size: 20px;
   line-height: 1;
 }
 
