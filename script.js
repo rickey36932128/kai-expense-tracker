@@ -1,6 +1,6 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v26";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v26";
+const APP_VERSION = "v27";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v27";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -8,7 +8,7 @@ const CURRENCY_OPTIONS = new Set(["TWD", "JPY"]);
 const EXPENSE_CATEGORY_RULES = [
   {
     category: "飲食",
-    pattern: /三餐|早餐|早午餐|午餐|晚餐|宵夜|零食|飲料|咖啡|茶|便當|餐|麵|飯|火鍋|燒肉|甜點|蛋糕|麵包|食物|吃/i,
+    pattern: /三餐|早餐|早午餐|午餐|晚餐|宵夜|零食|飲料|咖啡|茶|便當|餐|麵|飯|火鍋|燒肉|甜點|蛋糕|麵包|冰淇淋|漢堡|食物|吃/i,
   },
   {
     category: "購物",
@@ -284,6 +284,8 @@ function normalizeExpenseItem(item) {
 }
 
 function normalizeExpenseCategory(category, title) {
+  const matchedCategory = matchExpenseCategory(title);
+  if (matchedCategory) return matchedCategory;
   if (EXPENSE_CATEGORY_RULES.some((rule) => rule.category === category)) return category;
   if (LEGACY_EXPENSE_CATEGORY_MAP[category]) return LEGACY_EXPENSE_CATEGORY_MAP[category];
   return inferCategory(title);
@@ -428,8 +430,12 @@ function getSelectedMonthKey() {
 }
 
 function inferCategory(title) {
+  return matchExpenseCategory(title) || "娛樂";
+}
+
+function matchExpenseCategory(title) {
   const matchedRule = EXPENSE_CATEGORY_RULES.find((rule) => rule.pattern.test(title));
-  return matchedRule ? matchedRule.category : "娛樂";
+  return matchedRule?.category || "";
 }
 
 function inferIncomeCategory(title) {
