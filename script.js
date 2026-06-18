@@ -1,10 +1,41 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v25";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v25";
+const APP_VERSION = "v26";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v26";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
 const CURRENCY_OPTIONS = new Set(["TWD", "JPY"]);
+const EXPENSE_CATEGORY_RULES = [
+  {
+    category: "飲食",
+    pattern: /三餐|早餐|早午餐|午餐|晚餐|宵夜|零食|飲料|咖啡|茶|便當|餐|麵|飯|火鍋|燒肉|甜點|蛋糕|麵包|食物|吃/i,
+  },
+  {
+    category: "購物",
+    pattern: /衣服|服裝|上衣|褲|裙|外套|內衣|襪|鞋|球鞋|靴|帽|包|配件|飾品|穿搭/i,
+  },
+  {
+    category: "住宿",
+    pattern: /住宿|房租|租金|水電|電費|水費|瓦斯|管理費|家具|床|桌|椅|沙發|衣櫃|家電/i,
+  },
+  {
+    category: "交通",
+    pattern: /交通|交通費|加油|油錢|停車|停車費|車票|捷運|公車|高鐵|台鐵|火車|客運|計程車|uber|taxi|機票|車資/i,
+  },
+  {
+    category: "教育",
+    pattern: /教育|書|書籍|課程|學費|補習|教材|文具|學習用品|講座|考試|證照/i,
+  },
+  {
+    category: "娛樂",
+    pattern: /娛樂|旅遊|旅行|運動|電影|影票|遊戲|演唱會|展覽|門票|健身|球|唱歌|ktv|酒吧|按摩|露營|飯店|民宿/i,
+  },
+];
+const LEGACY_EXPENSE_CATEGORY_MAP = {
+  衣服: "購物",
+  生活: "住宿",
+  其他: "娛樂",
+};
 const ASSET_CATEGORIES = [
   { key: "bank", label: "銀行存款" },
   { key: "twStocks", label: "台股" },
@@ -172,7 +203,7 @@ function preventDoubleTapZoom(event) {
   event.preventDefault();
 }
 
-function createExpense(title, amount, category = "其他", date = new Date()) {
+function createExpense(title, amount, category = "飲食", date = new Date()) {
   return createMoneyItem(title, amount, category, date);
 }
 
@@ -180,7 +211,7 @@ function createIncome(title, amount, category = "其他", date = new Date()) {
   return createMoneyItem(title, amount, category, date);
 }
 
-function createMoneyItem(title, amount, category = "其他", date = new Date()) {
+function createMoneyItem(title, amount, category = "飲食", date = new Date()) {
   return {
     id: createId(),
     title,
@@ -228,7 +259,7 @@ function isValidState(value) {
 
 function cleanState(value) {
   return {
-    expenses: value.expenses.filter((expense) => isValidExpense(expense) && !isSeedExpense(expense)).map(normalizeMoneyItem),
+    expenses: value.expenses.filter((expense) => isValidExpense(expense) && !isSeedExpense(expense)).map(normalizeExpenseItem),
     incomes: Array.isArray(value.incomes) ? value.incomes.filter(isValidMoneyItem).map(normalizeMoneyItem) : [],
     debts: value.debts.filter((debt) => isValidDebt(debt) && !isSeedDebt(debt)).map(normalizeMoneyItem),
     assetSnapshots: normalizeAssetSnapshots(value.assetSnapshots),
@@ -241,6 +272,21 @@ function normalizeMoneyItem(item) {
     ...item,
     currency: CURRENCY_OPTIONS.has(item.currency) ? item.currency : DEFAULT_CURRENCY,
   };
+}
+
+function normalizeExpenseItem(item) {
+  const normalized = normalizeMoneyItem(item);
+
+  return {
+    ...normalized,
+    category: normalizeExpenseCategory(normalized.category, normalized.title),
+  };
+}
+
+function normalizeExpenseCategory(category, title) {
+  if (EXPENSE_CATEGORY_RULES.some((rule) => rule.category === category)) return category;
+  if (LEGACY_EXPENSE_CATEGORY_MAP[category]) return LEGACY_EXPENSE_CATEGORY_MAP[category];
+  return inferCategory(title);
 }
 
 function normalizeAssetSnapshots(value) {
@@ -382,11 +428,8 @@ function getSelectedMonthKey() {
 }
 
 function inferCategory(title) {
-  if (/早餐|午餐|晚餐|咖啡|飲料|便當|餐|麵|飯|宵夜/i.test(title)) return "飲食";
-  if (/捷運|公車|高鐵|uber|計程車|油錢|停車/i.test(title)) return "交通";
-  if (/網購|衣服|鞋|momo|pchome|蝦皮|購物/i.test(title)) return "購物";
-  if (/全聯|家樂福|超市|日用品|衛生紙/i.test(title)) return "生活";
-  return "其他";
+  const matchedRule = EXPENSE_CATEGORY_RULES.find((rule) => rule.pattern.test(title));
+  return matchedRule ? matchedRule.category : "娛樂";
 }
 
 function inferIncomeCategory(title) {
@@ -579,10 +622,10 @@ function saveExpenseDateEdit(event) {
   record.title = title;
   record.date = mergeDateWithExistingTime(elements.expenseEditDate.value, record.date);
   record.amount = amount;
+  record.category = nextType === "income" ? inferIncomeCategory(record.title) : inferCategory(record.title);
 
   if (nextType !== originalType) {
     source.splice(recordIndex, 1);
-    record.category = nextType === "income" ? inferIncomeCategory(record.title) : inferCategory(record.title);
     const target = nextType === "income" ? state.incomes : state.expenses;
     target.unshift(record);
   }
@@ -1129,9 +1172,11 @@ function renderDebtList(debts) {
 function getCategoryClass(category) {
   const map = {
     飲食: "food",
-    交通: "transit",
     購物: "shopping",
-    生活: "grocery",
+    住宿: "housing",
+    交通: "transit",
+    教育: "education",
+    娛樂: "entertainment",
   };
   return map[category] || "other";
 }

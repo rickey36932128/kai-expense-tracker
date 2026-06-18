@@ -440,12 +440,24 @@ dd {
   background: rgba(255, 149, 0, 0.2);
 }
 
+.shopping {
+  background: rgba(175, 82, 222, 0.17);
+}
+
+.housing {
+  background: rgba(88, 86, 214, 0.16);
+}
+
 .transit {
   background: rgba(0, 122, 255, 0.18);
 }
 
-.shopping {
-  background: rgba(175, 82, 222, 0.17);
+.education {
+  background: rgba(90, 200, 250, 0.18);
+}
+
+.entertainment {
+  background: rgba(255, 45, 85, 0.16);
 }
 
 .grocery,
