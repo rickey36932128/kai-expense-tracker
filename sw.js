@@ -1,10 +1,8 @@
-const CACHE_NAME = "kai-expense-tracker-v33";
-const INDEX_URL = "./index.html?v=32";
-const THEME_URL = "./theme-v31.css?v=32";
+const CACHE_NAME = "kai-expense-tracker-v29";
 const ASSETS = [
-  INDEX_URL,
+  "./",
+  "./index.html?v=29",
   "./styles.css?v=29",
-  THEME_URL,
   "./script.js?v=29",
   "./manifest.webmanifest?v=29",
   "./icons/icon-192.png",
@@ -40,17 +38,15 @@ self.addEventListener("message", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  const requestUrl = new URL(event.request.url);
-
   if (event.request.mode === "navigate") {
-    event.respondWith(loadAppShell());
+    event.respondWith(fetch(event.request).catch(() => caches.match("./index.html?v=29")));
     return;
   }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (response && response.ok && requestUrl.origin === self.location.origin) {
+        if (response && response.ok && new URL(event.request.url).origin === self.location.origin) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
@@ -59,16 +55,3 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(event.request))
   );
 });
-
-async function loadAppShell() {
-  const cache = await caches.open(CACHE_NAME);
-
-  try {
-    const response = await fetch(INDEX_URL, { cache: "reload" });
-    if (!response.ok) throw new Error("Index unavailable");
-    cache.put(INDEX_URL, response.clone());
-    return response;
-  } catch {
-    return (await cache.match(INDEX_URL)) || Response.error();
-  }
-}
