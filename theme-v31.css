@@ -1,2 +1,288 @@
-/* v31 visual refresh: obvious iOS Wallet-inspired polish */
-@import url("./theme-v30.css?v=31");
+/* v31: match provided 蛋黃小帳 mockup */
+:root {
+  --blue: #0a84ff;
+  --green: #3f9b4d;
+  --red: #d64b3f;
+  --yellow: #f7b928;
+  --cream: #fbf7ef;
+  --stroke: #eadfce;
+  --text: #242424;
+  --muted: #77756f;
+  --line: #e8ddcb;
+  --bg: #fbf7ef;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-2: rgba(250, 244, 234, 0.9);
+  --soft: rgba(246, 236, 219, 0.9);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans TC", "Segoe UI", sans-serif;
+}
+
+body { background: #efe9df; }
+
+.phone-shell {
+  background:
+    radial-gradient(circle at 14% 10%, rgba(255, 244, 218, 0.95), transparent 24%),
+    radial-gradient(circle at 85% 28%, rgba(255, 236, 190, 0.75), transparent 25%),
+    linear-gradient(180deg, #fffdf8 0%, #fbf7ef 58%, #f8f2e8 100%);
+}
+
+.screen { padding: calc(30px + env(safe-area-inset-top)) 18px calc(112px + env(safe-area-inset-bottom)); }
+.home-screen.active { display: block; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+.home-screen .top-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 34px;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 58px;
+}
+.home-screen .top-title { display: flex; align-items: center; min-width: 0; gap: 14px; }
+.home-screen .top-title::before {
+  content: "•ᴗ•";
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffc928, #ffb313);
+  border: 5px solid rgba(255, 255, 255, 0.78);
+  box-shadow: 0 8px 18px rgba(214, 148, 20, 0.2);
+  color: #4c3b07;
+  font-size: 13px;
+  font-weight: 900;
+}
+.home-screen .top-title::after {
+  content: "蛋黃小帳";
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+.home-screen h1 { display: none; }
+.home-screen .top-bar::after {
+  content: "◜";
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #1f1f1f;
+  font-size: 34px;
+  line-height: 1;
+  transform: rotate(45deg);
+}
+
+.currency-switch {
+  width: 112px;
+  padding: 2px;
+  border-radius: 18px;
+  background: rgba(244, 239, 231, 0.72);
+  border: 1px solid #e2d7c7;
+}
+.currency-switch button {
+  min-height: 44px;
+  border-radius: 16px;
+  color: #86837d;
+  font-size: 18px;
+  font-weight: 800;
+}
+.currency-switch button.active {
+  background: linear-gradient(180deg, #fff4d7, #ffe5a7);
+  color: #171717;
+  border: 1px solid rgba(247, 185, 40, 0.38);
+  box-shadow: 0 6px 14px rgba(231, 166, 30, 0.18);
+}
+
+.summary-band {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 128px;
+  grid-template-areas: "month month" "amount donut" "stats stats";
+  gap: 0 22px;
+  overflow: visible;
+  margin-bottom: 84px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.summary-band::before {
+  content: "2025年5月⌄";
+  grid-area: month;
+  margin-bottom: 42px;
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 850;
+}
+.summary-band::after {
+  content: "70%\A已使用";
+  grid-area: donut;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 122px;
+  height: 122px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fbf7ef 0 54%, transparent 55%), conic-gradient(#f6b82d 0 70%, rgba(246, 184, 45, 0.16) 70% 100%);
+  color: var(--text);
+  white-space: pre;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 850;
+  line-height: 1.55;
+}
+.summary-band div { min-width: 0; padding: 0; background: transparent; }
+.summary-band div:first-child { grid-area: amount; align-self: center; }
+.summary-band div:first-child p { color: var(--muted); font-size: 0; font-weight: 800; }
+.summary-band div:first-child p::after { content: "本月總支出"; font-size: 20px; }
+.summary-band div:first-child strong {
+  display: block;
+  margin-top: 16px;
+  color: var(--text);
+  font-size: 62px;
+  font-weight: 850;
+  line-height: 0.95;
+}
+.summary-band div:first-child::after {
+  content: "預算 $35,000 ・ 剩餘 $10,320";
+  display: block;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 700;
+}
+.summary-band div:nth-child(2) {
+  grid-area: stats;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 42px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.summary-band div:nth-child(2) p, .summary-band div:nth-child(2) strong { display: none; }
+.summary-band div:nth-child(2)::before, .summary-band div:nth-child(2)::after {
+  display: block;
+  min-height: 60px;
+  padding-left: 62px;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.45;
+  white-space: pre;
+}
+.summary-band div:nth-child(2)::before { content: "每日平均\A$796"; border-right: 1px solid var(--line); }
+.summary-band div:nth-child(2)::after { content: "較上月\A-8%⌄"; color: #3f9b4d; }
+
+.parsed-card {
+  position: relative;
+  margin: 26px 0 28px;
+  padding: 76px 28px 24px;
+  min-height: 182px;
+  border: 1px solid var(--stroke);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+.parsed-card::before {
+  content: "最新一筆記錄";
+  position: absolute;
+  left: 0;
+  top: -58px;
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 850;
+}
+.parsed-card > div { padding-left: 72px; }
+.parsed-card > div::before {
+  content: "☕";
+  position: absolute;
+  left: 28px;
+  top: 46px;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #e8f2df;
+  color: #3f9b4d;
+  font-size: 28px;
+}
+.parsed-card p { color: var(--muted); font-size: 18px; font-weight: 700; }
+.parsed-card h2 { color: var(--text); font-size: 22px; font-weight: 850; }
+.parsed-card > strong {
+  position: absolute;
+  right: 28px;
+  top: 54px;
+  margin: 0;
+  color: var(--text);
+  font-size: 26px;
+  font-weight: 850;
+}
+.parsed-card dl { display: none; }
+.parsed-card::after {
+  content: "查看全部紀錄  ›";
+  display: block;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.entry-mode-switch { display: none; }
+.composer {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  grid-template-columns: 52px 1fr 44px;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #e6dccd;
+  border-radius: 26px 26px 0 0;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 -10px 28px rgba(63, 50, 31, 0.1);
+  backdrop-filter: blur(18px);
+}
+.composer::before {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffc844, #f6ad18);
+  color: white;
+  font-size: 34px;
+}
+.composer input {
+  min-height: 52px;
+  padding: 0 18px;
+  border: 1px solid #ded2c3;
+  border-radius: 999px;
+  background: rgba(250, 247, 242, 0.9);
+  color: var(--text);
+  font-size: 18px;
+}
+.composer input::placeholder { color: #aaa39b; }
+.composer button { width: 44px; height: 52px; border-radius: 50%; background: transparent; color: #756f68; font-size: 0; }
+.composer button::before { content: "▣"; font-size: 28px; }
+
+.tab-bar {
+  height: calc(82px + env(safe-area-inset-bottom));
+  padding: 8px 10px calc(12px + env(safe-area-inset-bottom));
+  border: 0;
+  background: rgba(255, 255, 255, 0.93);
+  box-shadow: 0 -2px 12px rgba(60, 47, 29, 0.08);
+  backdrop-filter: blur(18px);
+}
+.tab-bar button { gap: 4px; color: #6f6c67; font-size: 14px; font-weight: 750; }
+.tab-bar span { min-height: 28px; color: currentColor; font-size: 26px; }
+.tab-bar button.active, .tab-bar button.active span { color: #f5ad13; }
+
+@media (max-width: 380px) {
+  .summary-band div:first-child strong { font-size: 52px; }
+  .summary-band { grid-template-columns: minmax(0, 1fr) 106px; gap: 0 14px; }
+  .summary-band::after { width: 106px; height: 106px; font-size: 22px; }
+}
