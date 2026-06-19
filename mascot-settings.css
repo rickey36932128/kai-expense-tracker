@@ -1,0 +1,135 @@
+.mascot-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 58px;
+  margin-bottom: 14px;
+}
+
+.mascot-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: auto;
+  height: 58px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.mascot-button::after {
+  content: "\86CB\9EC3\5C0F\5E33";
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mascot-button img {
+  display: block;
+  flex: 0 0 auto;
+  max-width: 54px;
+  max-height: 54px;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 10px rgba(41, 34, 22, 0.06));
+}
+
+.settings-topbar {
+  margin-bottom: 8px;
+}
+
+.settings-screen {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-screen.active {
+  display: block;
+}
+
+.settings-panel {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.settings-panel h2 {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.settings-currency-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f2eee6;
+}
+
+.settings-currency-picker button {
+  min-height: 38px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.settings-currency-picker button.active {
+  background: var(--surface);
+  color: var(--brand);
+  box-shadow: 0 3px 10px rgba(41, 34, 22, 0.06);
+}
+
+.settings-row-button,
+.settings-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 50px;
+  padding: 0 2px;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 750;
+  text-align: left;
+}
+
+.settings-row-button:first-of-type,
+.settings-info-row:first-of-type {
+  border-top: 0;
+}
+
+.settings-row-button {
+  width: 100%;
+}
+
+.settings-row-button::after {
+  content: "\203A";
+  color: var(--muted);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.settings-row-button.danger {
+  color: var(--red);
+}
+
+.settings-info-row span {
+  color: var(--muted);
+}
+
+.settings-info-row strong {
+  color: var(--text);
+}
