@@ -1,4 +1,4 @@
-const CACHE_NAME = "kai-expense-tracker-v31-mascot-settings";
+const CACHE_NAME = "kai-expense-tracker-v31-mascot-settings-r2";
 const ASSETS = [
   "./",
   "./index.html?v=31-mascot-settings",
@@ -14,12 +14,8 @@ const ASSETS = [
   "./icons/icon-512.png",
 ];
 
-const HTML_INJECTION = `
-  <link rel="stylesheet" href="mascot-settings.css?v=31-mascot-settings" />
-  <script src="mascot-image-home.js?v=31-mascot-settings"></script>
-  <script src="mascot-image-fallback.js?v=31-mascot-settings"></script>
-  <script src="mascot-settings.js?v=31-mascot-settings"></script>
-`;
+const HEAD_INJECTION = '<link rel="stylesheet" href="mascot-settings.css?v=31-mascot-settings" />';
+const BODY_INJECTION = '<script src="mascot-image-home.js?v=31-mascot-settings"></script><script src="mascot-image-fallback.js?v=31-mascot-settings"></script><script src="mascot-settings.js?v=31-mascot-settings"></script>';
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -28,8 +24,7 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
+    caches.keys()
       .then((keys) => Promise.all(keys.filter((key) => key.startsWith("kai-expense-tracker-") && key !== CACHE_NAME).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
@@ -45,7 +40,7 @@ async function injectExperience(response) {
   const text = await response.text();
   const headers = new Headers(response.headers);
   headers.delete("content-length");
-  return new Response(text.replace("</head>", `${HTML_INJECTION}</head>`), { status: response.status, statusText: response.statusText, headers });
+  return new Response(text.replace("</head>", `${HEAD_INJECTION}</head>`).replace("</body>", `${BODY_INJECTION}</body>`), { status: response.status, statusText: response.statusText, headers });
 }
 
 self.addEventListener("fetch", (event) => {
@@ -55,9 +50,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   event.respondWith(fetch(event.request).then((response) => {
-    if (response && response.ok && new URL(event.request.url).origin === self.location.origin) {
-      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
-    }
+    if (response && response.ok && new URL(event.request.url).origin === self.location.origin) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
     return response;
   }).catch(() => caches.match(event.request)));
 });
