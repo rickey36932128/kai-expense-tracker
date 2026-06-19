@@ -1,3 +1,6 @@
+Exit code: 0
+Wall time: 0.9 seconds
+Output:
 (() => {
   const imageFor = (name) => window.__mascotImages?.[name] || "";
   const screens = () => document.querySelectorAll(".screen");
@@ -75,9 +78,10 @@
   replaceHeader(".home-screen .top-bar", "home");
   replaceHeader("[data-screen='records'] .top-bar", "records");
   replaceHeader("[data-screen='debts'] .top-bar", "debts");
-  replaceHeader(".asset-topbar", "assets", { trailing: '<button type="button" id="asset-month-action">\u672C\u6708\u8CC7\u7522\u5C1A\u672A\u66F4\u65B0</button>' });
+  replaceHeader(".asset-topbar", "assets");
   replaceHeader(".split-topbar", "split", { trailing: '<strong id="split-expense-count">0 \u7B46</strong>' });
   document.querySelectorAll("[data-mascot-target]").forEach((button) => button.addEventListener("click", () => showScreen(button.dataset.mascotTarget)));
   const currency = JSON.parse(localStorage.getItem("kai-expense-tracker-v1") || "{}").currency || "TWD";
   document.querySelectorAll("[data-settings-currency]").forEach((button) => button.classList.toggle("active", button.dataset.settingsCurrency === currency));
 })();
+
