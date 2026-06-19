@@ -1,11 +1,10 @@
-const CACHE_NAME = "kai-expense-tracker-v32";
-const INDEX_URL = "./index.html?v=31";
-const THEME_URL = "./theme-v31.css?v=31";
+const CACHE_NAME = "kai-expense-tracker-v33";
+const INDEX_URL = "./index.html?v=32";
+const THEME_URL = "./theme-v31.css?v=32";
 const ASSETS = [
   INDEX_URL,
   "./styles.css?v=29",
   THEME_URL,
-  "./theme-v30.css?v=31",
   "./script.js?v=29",
   "./manifest.webmanifest?v=29",
   "./icons/icon-192.png",
@@ -48,11 +47,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (requestUrl.origin === self.location.origin && requestUrl.pathname.endsWith("/styles.css")) {
-    event.respondWith(loadThemedStyles(event.request));
-    return;
-  }
-
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -76,33 +70,5 @@ async function loadAppShell() {
     return response;
   } catch {
     return (await cache.match(INDEX_URL)) || Response.error();
-  }
-}
-
-async function loadThemedStyles(request) {
-  const cache = await caches.open(CACHE_NAME);
-
-  try {
-    const [baseResponse, themeResponse] = await Promise.all([
-      fetch(request, { cache: "reload" }),
-      fetch(THEME_URL, { cache: "reload" }),
-    ]);
-
-    if (!baseResponse.ok) throw new Error("Base stylesheet unavailable");
-
-    const baseCss = await baseResponse.text();
-    const themeCss = themeResponse.ok ? await themeResponse.text() : "";
-    const themedResponse = new Response(`${baseCss}\n\n${themeCss}`, {
-      headers: {
-        "Content-Type": "text/css; charset=utf-8",
-        "Cache-Control": "no-cache",
-      },
-    });
-
-    cache.put(request, themedResponse.clone());
-    return themedResponse;
-  } catch {
-    const cached = await cache.match(request);
-    return cached || caches.match("./styles.css?v=29") || Response.error();
   }
 }
