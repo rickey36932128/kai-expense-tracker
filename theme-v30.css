@@ -1,0 +1,230 @@
+/* v30 visual refresh: iOS Wallet-inspired polish */
+:root {
+  --blue: #0a84ff;
+  --green: #30d158;
+  --red: #ff453a;
+  --bg: #f5f5f7;
+  --surface: rgba(255, 255, 255, 0.96);
+  --surface-2: #f2f3f7;
+  --text: #151517;
+  --muted: #7a7a83;
+  --line: rgba(60, 60, 67, 0.13);
+  --soft: #eef0f5;
+  --card-shadow: 0 14px 32px rgba(35, 42, 58, 0.08);
+}
+
+body {
+  background: radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.9), transparent 34%), #d9dce3;
+}
+
+.phone-shell {
+  background: linear-gradient(180deg, #fbfbfd 0%, var(--bg) 42%, #f0f1f5 100%);
+}
+
+.screen {
+  padding-inline: 20px;
+}
+
+.top-bar,
+.asset-topbar,
+.split-topbar {
+  margin-bottom: 16px;
+}
+
+h1,
+.home-screen h1,
+.asset-topbar h1 {
+  font-size: 34px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.eyebrow {
+  color: #8e8e96;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.currency-switch,
+.entry-mode-switch,
+.analysis-toggle,
+.month-switcher {
+  background: rgba(118, 118, 128, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.04);
+}
+
+.currency-switch button.active,
+.entry-mode-switch button.active,
+.analysis-toggle button.active {
+  box-shadow: 0 3px 10px rgba(28, 28, 30, 0.12);
+}
+
+.summary-band,
+.parsed-card,
+.analysis-balance-card,
+.chart-card,
+.month-switcher,
+.debt-total,
+.debt-form,
+.net-worth-card,
+.asset-panel,
+.split-card,
+.transaction-list,
+.debt-list,
+.settings-list,
+.category-summary-item {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: var(--card-shadow);
+}
+
+.summary-band {
+  gap: 0;
+  border-radius: 24px;
+}
+
+.summary-band div {
+  padding: 19px 18px;
+}
+
+.summary-band div + div {
+  border-left: 1px solid var(--line);
+}
+
+.summary-band p,
+.month-total p,
+.debt-total p,
+.parsed-card p,
+.debt-form label span,
+.split-field span {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.summary-band strong {
+  font-size: 27px;
+  font-weight: 850;
+}
+
+.parsed-card,
+.analysis-balance-card,
+.chart-card,
+.debt-total,
+.debt-form,
+.net-worth-card,
+.asset-panel,
+.split-card {
+  border-radius: 26px;
+}
+
+.parsed-card {
+  min-height: 184px;
+  padding: 20px;
+}
+
+.parsed-card > strong {
+  margin-top: 10px;
+  font-size: 36px;
+  font-weight: 850;
+}
+
+.parsed-card dl div,
+.split-summary-grid div,
+.asset-edit-form section {
+  background: rgba(118, 118, 128, 0.09);
+}
+
+.composer,
+.entry-mode-switch {
+  left: 16px;
+  right: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 40px rgba(28, 28, 30, 0.16);
+}
+
+.composer {
+  grid-template-columns: 1fr 40px;
+  padding: 9px;
+  border-radius: 28px;
+}
+
+.composer button {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(180deg, #0a84ff, #0071e3);
+  box-shadow: 0 7px 16px rgba(10, 132, 255, 0.28);
+}
+
+.entry-mode-switch button.active,
+.analysis-toggle button.active,
+.split-submit,
+.debt-form button,
+.edit-actions button[type="submit"] {
+  background: linear-gradient(180deg, #34d66b, #20b957);
+}
+
+.analysis-balance-card {
+  background: linear-gradient(160deg, #1f232a 0%, #323946 55%, #465061 100%);
+  box-shadow: 0 18px 36px rgba(31, 35, 42, 0.18);
+}
+
+.chart-card,
+.debt-form,
+.month-switcher,
+.transaction-list,
+.debt-list,
+.settings-list,
+.category-summary-item {
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.debt-form input,
+.split-field input,
+.split-field select,
+.asset-edit-form input,
+.edit-form input[type="date"],
+.edit-form input[type="text"] {
+  border-color: transparent;
+  background: rgba(118, 118, 128, 0.1);
+}
+
+.delete-button,
+.danger-action,
+.danger-zone button,
+.split-clear-settlement {
+  background: rgba(255, 69, 58, 0.12);
+}
+
+.avatar {
+  background: rgba(10, 132, 255, 0.13);
+  color: var(--blue);
+}
+
+.tab-bar {
+  left: 10px;
+  right: 10px;
+  bottom: 8px;
+  height: calc(68px + env(safe-area-inset-bottom));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 14px 38px rgba(28, 28, 30, 0.13);
+}
+
+.tab-bar button {
+  border-radius: 18px;
+  font-weight: 750;
+}
+
+.tab-bar button.active {
+  color: var(--blue);
+  background: rgba(10, 132, 255, 0.1);
+}
+
+@media (max-width: 460px) {
+  .tab-bar {
+    left: 10px;
+    right: 10px;
+    bottom: 8px;
+  }
+}
