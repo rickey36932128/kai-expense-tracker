@@ -1,9 +1,10 @@
-const CACHE_NAME = "kai-expense-tracker-v30";
+const CACHE_NAME = "kai-expense-tracker-v31";
+const INDEX_URL = "./index.html?v=30";
+const THEME_URL = "./theme-v30.css?v=30";
 const ASSETS = [
-  "./",
-  "./index.html?v=29",
+  INDEX_URL,
   "./styles.css?v=29",
-  "./theme-v30.css?v=30",
+  THEME_URL,
   "./script.js?v=29",
   "./manifest.webmanifest?v=29",
   "./icons/icon-192.png",
@@ -42,7 +43,7 @@ self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
 
   if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("./index.html?v=29")));
+    event.respondWith(loadAppShell());
     return;
   }
 
@@ -64,13 +65,26 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
+async function loadAppShell() {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    const response = await fetch(INDEX_URL, { cache: "reload" });
+    if (!response.ok) throw new Error("Index unavailable");
+    cache.put(INDEX_URL, response.clone());
+    return response;
+  } catch {
+    return (await cache.match(INDEX_URL)) || Response.error();
+  }
+}
+
 async function loadThemedStyles(request) {
   const cache = await caches.open(CACHE_NAME);
 
   try {
     const [baseResponse, themeResponse] = await Promise.all([
-      fetch(request),
-      fetch("./theme-v30.css?v=30"),
+      fetch(request, { cache: "reload" }),
+      fetch(THEME_URL, { cache: "reload" }),
     ]);
 
     if (!baseResponse.ok) throw new Error("Base stylesheet unavailable");
