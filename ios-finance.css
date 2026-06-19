@@ -1,0 +1,361 @@
+:root {
+  color-scheme: light;
+  --blue: #f4b121;
+  --green: #2f8f55;
+  --red: #d94b42;
+  --bg: #faf8f4;
+  --surface: #ffffff;
+  --surface-2: #fbfaf7;
+  --text: #171717;
+  --muted: #7a7a7a;
+  --line: #eae3d9;
+  --brand: #f4b121;
+  --shadow-soft: 0 10px 28px rgba(41, 34, 22, 0.045);
+}
+
+body {
+  background: #faf8f4;
+}
+
+button {
+  color: var(--brand);
+}
+
+.phone-shell {
+  background: var(--bg);
+  border: 0;
+  box-shadow: none;
+}
+
+.screen {
+  padding: calc(28px + env(safe-area-inset-top)) 22px calc(104px + env(safe-area-inset-bottom));
+}
+
+.screen.active {
+  gap: 0;
+}
+
+.top-bar,
+.asset-topbar,
+.split-topbar {
+  margin-bottom: 22px;
+}
+
+.top-bar.with-currency {
+  align-items: center;
+}
+
+h1,
+.home-screen h1,
+.asset-topbar h1 {
+  color: var(--text);
+  font-size: 34px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+h2 {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.currency-switch,
+.month-switcher,
+.entry-mode-switch,
+.analysis-toggle {
+  background: #f2eee6;
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.currency-switch {
+  width: 118px;
+  border-radius: 999px;
+}
+
+.currency-switch button {
+  min-height: 34px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.currency-switch button.active {
+  background: var(--surface);
+  color: var(--brand);
+  box-shadow: 0 3px 10px rgba(41, 34, 22, 0.06);
+}
+
+.summary-band,
+.month-total,
+.debt-total,
+.parsed-card,
+.chart-card,
+.analysis-balance-card,
+.debt-form,
+.net-worth-card,
+.asset-panel,
+.split-card,
+.transaction-list,
+.debt-list,
+.settings-list,
+.category-summary-item,
+.edit-card {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.summary-band {
+  margin-bottom: 18px;
+  border-radius: 24px;
+}
+
+.summary-band div {
+  padding: 22px 18px;
+}
+
+.summary-band div + div {
+  border-left: 1px solid var(--line);
+}
+
+.summary-band p,
+.month-total p,
+.debt-total p,
+.parsed-card p,
+.balance-card-head p,
+.net-worth-card summary span,
+.asset-section-heading span,
+.split-section-title span,
+.split-participants-head span,
+.debt-form label span,
+.split-field span {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.summary-band strong {
+  margin-top: 10px;
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 850;
+}
+
+.parsed-card {
+  min-height: 188px;
+  padding: 22px;
+  margin-bottom: 22px;
+}
+
+.parsed-card > strong {
+  margin-top: 10px;
+  color: var(--red);
+  font-size: 36px;
+  font-weight: 850;
+}
+
+.parsed-card dl {
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.parsed-card dl div,
+.split-summary-grid div,
+.chart-legend,
+.split-person-row,
+.split-share-list label,
+.split-paid-list li,
+.split-suggestions li,
+.asset-edit-form section {
+  background: var(--surface-2);
+  border: 1px solid rgba(234, 227, 217, 0.7);
+}
+
+.entry-mode-switch {
+  left: 22px;
+  right: 22px;
+  bottom: calc(132px + env(safe-area-inset-bottom));
+  padding: 5px;
+  border-radius: 999px;
+  background: #f2eee6;
+  box-shadow: none;
+}
+
+.entry-mode-switch button,
+.analysis-toggle button {
+  color: var(--muted);
+  border-radius: 999px;
+}
+
+.entry-mode-switch button.active,
+.analysis-toggle button.active {
+  background: var(--surface);
+  color: var(--brand);
+  box-shadow: 0 3px 10px rgba(41, 34, 22, 0.06);
+}
+
+.composer {
+  left: 20px;
+  right: 20px;
+  bottom: calc(78px + env(safe-area-inset-bottom));
+  grid-template-columns: 1fr 40px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 0 8px 22px rgba(41, 34, 22, 0.07);
+}
+
+.composer input {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.composer input::placeholder {
+  color: #aaa39b;
+}
+
+.composer button,
+.debt-form button,
+.split-submit,
+.edit-actions button[type="submit"] {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: none;
+}
+
+.analysis-balance-card {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.analysis-balance-card > strong {
+  color: var(--text);
+}
+
+.balance-card-head span {
+  background: rgba(244, 177, 33, 0.12);
+  color: var(--brand);
+}
+
+.balance-card-foot,
+.balance-card-head p {
+  color: var(--muted);
+}
+
+.balance-card-foot b {
+  color: var(--text);
+}
+
+.donut-chart::after,
+.donut-chart {
+  background-color: var(--surface);
+}
+
+.month-switcher button,
+.inline-action,
+.asset-topbar button,
+.split-add-person,
+.split-participants-head button {
+  background: rgba(244, 177, 33, 0.12);
+  color: var(--brand);
+  box-shadow: none;
+}
+
+.debt-form input,
+.split-field input,
+.split-field select,
+.asset-edit-form input,
+.edit-form input[type="date"],
+.edit-form input[type="text"] {
+  border-color: var(--line);
+  background: var(--surface-2);
+}
+
+.avatar,
+.category-dot,
+.food,
+.shopping,
+.housing,
+.transit,
+.education,
+.entertainment,
+.grocery,
+.other {
+  background: rgba(244, 177, 33, 0.13);
+}
+
+.delete-button,
+.danger-action,
+.danger-zone button,
+.split-clear-settlement {
+  background: rgba(217, 75, 66, 0.1);
+  color: var(--red);
+}
+
+.asset-trend-point i {
+  background: var(--brand);
+}
+
+.tab-bar {
+  height: calc(76px + env(safe-area-inset-bottom));
+  padding: 8px 8px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: #ffffff;
+  box-shadow: none;
+  backdrop-filter: blur(18px);
+}
+
+.tab-bar button {
+  color: #7a7a7a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tab-bar button.active {
+  color: var(--brand);
+}
+
+.tab-bar .nav-icon {
+  display: grid;
+  place-items: center;
+  min-height: 30px;
+  font-size: 0;
+}
+
+.tab-bar .nav-icon svg {
+  display: block;
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tab-bar .home-icon svg {
+  width: 31px;
+  height: 31px;
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.tab-bar .card-icon svg {
+  width: 32px;
+}
+
+@media (max-width: 460px) {
+  body,
+  .phone-shell {
+    background: var(--bg);
+  }
+}
