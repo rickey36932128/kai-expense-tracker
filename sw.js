@@ -1,10 +1,11 @@
-const CACHE_NAME = "kai-expense-tracker-v31";
-const INDEX_URL = "./index.html?v=30";
-const THEME_URL = "./theme-v30.css?v=30";
+const CACHE_NAME = "kai-expense-tracker-v32";
+const INDEX_URL = "./index.html?v=31";
+const THEME_URL = "./theme-v31.css?v=31";
 const ASSETS = [
   INDEX_URL,
   "./styles.css?v=29",
   THEME_URL,
+  "./theme-v30.css?v=31",
   "./script.js?v=29",
   "./manifest.webmanifest?v=29",
   "./icons/icon-192.png",
