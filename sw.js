@@ -1,9 +1,10 @@
-const CACHE_NAME = "kai-expense-tracker-v37-static-page";
+const CACHE_NAME = "kai-expense-tracker-v38-home-density";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./ios-finance.css",
+  "./home-reorder.css",
   "./mascot-settings.css",
   "./mascot-image-home.js",
   "./mascot-image-records.js",

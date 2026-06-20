@@ -1,8 +1,12 @@
 /* Home financial summary: intentionally unframed, with one visual hierarchy. */
+.home-screen .top-bar {
+  margin-bottom: 0;
+}
+
 .home-screen .summary-band {
   display: block;
-  margin: 32px 0 0;
-  padding: 0 0 24px;
+  margin: 16px 0 0;
+  padding: 0 0 16px;
   border: 0;
   border-bottom: 1px solid var(--line);
   border-radius: 0;
@@ -15,7 +19,7 @@
 }
 
 .home-screen .summary-band > div:first-child p {
-  margin: 0 0 8px;
+  margin: 0 0 5px;
   color: var(--muted);
   font-size: 15px;
   font-weight: 650;
@@ -25,7 +29,7 @@
   display: block;
   margin: 0;
   color: var(--text);
-  font-size: 58px;
+  font-size: 50px;
   line-height: 1;
   font-weight: 760;
 }
@@ -33,7 +37,8 @@
 .home-screen .summary-band .home-metrics {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  padding: 31px 0 0;
+  padding: 18px 0 0;
+  border-left: 0;
 }
 
 .home-screen .home-metrics > div {
@@ -47,7 +52,7 @@
 }
 
 .home-screen .home-metrics p {
-  margin: 0 0 7px;
+  margin: 0 0 5px;
   color: var(--muted);
   font-size: 15px;
   font-weight: 650;
@@ -74,7 +79,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 25px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--line);
 }
 
@@ -86,12 +91,12 @@
 
 .home-screen .home-today strong {
   color: var(--text);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 750;
 }
 
 .home-screen .home-latest-heading {
-  margin: 32px 0 14px;
+  margin: 18px 0 10px;
   color: var(--text);
   font-size: 20px;
   font-weight: 780;
@@ -99,8 +104,9 @@
 
 .home-screen .parsed-card {
   display: block;
+  min-height: 0;
   margin: 0;
-  padding: 19px 18px;
+  padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: 20px;
   background: var(--surface);
@@ -115,7 +121,7 @@
 }
 
 .home-screen .parsed-card > div > div p {
-  margin: 7px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
   font-size: 15px;
   font-weight: 600;
@@ -133,6 +139,10 @@
   font-weight: 760;
 }
 
+.home-screen .parsed-card.is-editable::after {
+  display: none;
+}
+
 .home-screen .parsed-card dl {
   display: none;
 }
@@ -143,11 +153,11 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  margin-top: 17px;
-  padding-top: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -155,6 +165,23 @@
   font-size: 23px;
   font-weight: 500;
   line-height: 0;
+}
+
+.home-screen .entry-mode-switch,
+.home-screen .composer {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  flex: 0 0 auto;
+}
+
+.home-screen .entry-mode-switch {
+  margin-top: 12px;
+}
+
+.home-screen .composer {
+  margin-top: 8px;
 }
 
 @media (max-width: 380px) {
