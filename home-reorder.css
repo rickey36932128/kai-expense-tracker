@@ -167,3 +167,11 @@
   background: transparent !important;
   box-shadow: none !important;
 }
+
+.home-screen .home-today span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
