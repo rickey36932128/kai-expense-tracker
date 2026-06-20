@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </section>
       <section class="settings-panel">
         <h2>\u95DC\u65BC</h2>
-        <div class="settings-info-row"><span>\u7248\u672C\u865F</span><strong>v31</strong></div>
+        <div class="settings-info-row"><span>\u7248\u672C\u865F</span><strong>${document.querySelector('meta[name="app-version"]')?.content || "v36"}</strong></div>
         <button class="settings-row-button" type="button" id="mascot-feedback">\u610F\u898B\u56DE\u994B</button>
       </section>`;
     shell.insertBefore(section, shell.querySelector(".tab-bar"));
