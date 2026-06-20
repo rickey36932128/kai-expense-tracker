@@ -66,6 +66,7 @@ function init() {
   elements.recordsTotal = document.querySelector("#records-total");
   elements.monthTotal = document.querySelector("#month-total");
   elements.todayTotal = document.querySelector("#today-total");
+  elements.todayDate = document.querySelector("#today-date");
   elements.dailyAverage = document.querySelector("#daily-average");
   elements.monthCompare = document.querySelector("#month-compare");
   elements.debtList = document.querySelector("#debt-list");
@@ -898,6 +899,9 @@ function render() {
 
   elements.monthTotal.textContent = formatMoney(sumAmounts(thisMonthExpenses));
   elements.todayTotal.textContent = formatMoney(sumAmounts(todayExpenses));
+  const todayDate = new Date();
+  const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+  elements.todayDate.textContent = `${todayDate.getMonth() + 1}月${todayDate.getDate()}日 (${weekdays[todayDate.getDay()]})`;
   const elapsedDays = Math.max(1, new Date().getDate());
   const thisMonthTotal = sumAmounts(thisMonthExpenses);
   elements.dailyAverage.textContent = formatMoney(thisMonthTotal / elapsedDays);
