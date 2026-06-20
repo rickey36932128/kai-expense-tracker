@@ -1,4 +1,4 @@
-(() => {
+document.addEventListener("DOMContentLoaded", () => {
   const imageFor = (name) => window.__mascotImages?.[name] || "";
   const screens = () => document.querySelectorAll(".screen");
   const tabButtons = () => document.querySelectorAll(".tab-bar button");
@@ -80,5 +80,4 @@
   document.querySelectorAll("[data-mascot-target]").forEach((button) => button.addEventListener("click", () => showScreen(button.dataset.mascotTarget)));
   const currency = JSON.parse(localStorage.getItem("kai-expense-tracker-v1") || "{}").currency || "TWD";
   document.querySelectorAll("[data-settings-currency]").forEach((button) => button.classList.toggle("active", button.dataset.settingsCurrency === currency));
-})();
-
+});
