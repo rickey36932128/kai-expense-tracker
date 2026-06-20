@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
   replaceHeader("[data-screen='records'] .top-bar", "records");
   replaceHeader("[data-screen='debts'] .top-bar", "debts");
   replaceHeader(".asset-topbar", "assets");
-  replaceHeader(".split-topbar", "split", { trailing: '<strong id="split-expense-count">0 \u7B46</strong>' });
+  replaceHeader(".split-topbar", "split");
   document.querySelectorAll("[data-mascot-target]").forEach((button) => button.addEventListener("click", () => showScreen(button.dataset.mascotTarget)));
   const currency = JSON.parse(localStorage.getItem("kai-expense-tracker-v1") || "{}").currency || "TWD";
   document.querySelectorAll("[data-settings-currency]").forEach((button) => button.classList.toggle("active", button.dataset.settingsCurrency === currency));
