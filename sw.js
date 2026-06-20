@@ -1,9 +1,53 @@
-const CACHE_NAME = "kai-expense-tracker-v32-crisp-mascots";
-const ASSETS = ["./", "./index.html?v=32-crisp-mascots", "./styles.css?v=32-crisp-mascots", "./ios-finance.css?v=32-crisp-mascots", "./mascot-settings.css?v=32-crisp-mascots", "./mascot-image-home.js?v=32-crisp-mascots", "./mascot-image-records.js?v=32-crisp-mascots", "./mascot-image-assets.js?v=32-crisp-mascots", "./mascot-image-split.js?v=32-crisp-mascots", "./mascot-image-debts.js?v=32-crisp-mascots", "./mascot-settings.js?v=32-crisp-mascots", "./script.js?v=32-crisp-mascots", "./manifest.webmanifest?v=29", "./icons/icon-192.png", "./icons/icon-512.png"];
-const HEAD_INJECTION = '<link rel="stylesheet" href="mascot-settings.css?v=32-crisp-mascots" />';
-const BODY_INJECTION = '<script src="mascot-image-home.js?v=32-crisp-mascots"></script><script src="mascot-image-records.js?v=32-crisp-mascots"></script><script src="mascot-image-assets.js?v=32-crisp-mascots"></script><script src="mascot-image-split.js?v=32-crisp-mascots"></script><script src="mascot-image-debts.js?v=32-crisp-mascots"></script><script src="mascot-settings.js?v=32-crisp-mascots"></script>';
-self.addEventListener("install", (event) => { self.skipWaiting(); event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))); });
-self.addEventListener("activate", (event) => { event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith("kai-expense-tracker-") && key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim())); });
-self.addEventListener("message", (event) => { if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting(); });
-async function injectExperience(response) { const contentType = response.headers.get("content-type") || ""; if (!response.ok || !contentType.includes("text/html")) return response; const text = await response.text(); const headers = new Headers(response.headers); headers.delete("content-length"); return new Response(text.replace("</head>", HEAD_INJECTION + "</head>").replace("</body>", BODY_INJECTION + "</body>"), { status: response.status, statusText: response.statusText, headers }); }
-self.addEventListener("fetch", (event) => { if (event.request.method !== "GET") return; if (event.request.mode === "navigate") { event.respondWith(fetch(event.request).then(injectExperience).catch(async () => injectExperience(await caches.match("./index.html?v=32-crisp-mascots")))); return; } event.respondWith(fetch(event.request).then((response) => { if (response && response.ok && new URL(event.request.url).origin === self.location.origin) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone())); return response; }).catch(() => caches.match(event.request))); });
+const CACHE_NAME = "kai-expense-tracker-v37-static-page";
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./styles.css",
+  "./ios-finance.css",
+  "./mascot-settings.css",
+  "./mascot-image-home.js",
+  "./mascot-image-records.js",
+  "./mascot-image-assets.js",
+  "./mascot-image-split.js",
+  "./mascot-image-debts.js",
+  "./mascot-settings.js",
+  "./script.js",
+  "./manifest.webmanifest",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+];
+
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((key) => key.startsWith("kai-expense-tracker-") && key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  if (event.request.mode === "navigate") {
+    event.respondWith(fetch(event.request).catch(() => caches.match("./")));
+    return;
+  }
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.ok && new URL(event.request.url).origin === self.location.origin) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
+  );
+});
