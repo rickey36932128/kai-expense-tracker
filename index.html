@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="ios-finance.css?v=30-ios-finance" />
       <link rel="stylesheet" href="mascot-settings.css?v=35-header-align" />
       <meta name="app-version" content="v36" />
+      <link rel="stylesheet" href="home-reorder.css?v=1" />
   </head>
   <body>
     <main class="phone-shell" aria-label="蛋黃小帳 App">
@@ -42,31 +43,36 @@
 
         <section class="summary-band">
           <div>
-            <p>本月支出</p>
+            <p>本月總支出</p>
             <strong id="month-total">NT$ 0</strong>
           </div>
-          <div>
-            <p>今日支出</p>
-            <strong id="today-total">NT$ 0</strong>
+          <div class="home-metrics">
+            <div>
+              <p>每日平均</p>
+              <strong id="daily-average">NT$ 0</strong>
+            </div>
+            <div>
+              <p>較上月</p>
+              <strong id="month-compare">0%</strong>
+            </div>
           </div>
         </section>
 
+        <section class="home-today">
+          <p>今日支出</p>
+          <strong id="today-total">NT$ 0</strong>
+        </section>
+
+        <h2 class="home-latest-heading">最新一筆紀錄</h2>
         <article class="parsed-card" id="parsed-card" aria-live="polite">
           <div>
-            <p>最近新增</p>
-            <h2 id="parsed-title">尚未新增</h2>
+            <div>
+              <h2 id="parsed-title">尚未新增</h2>
+              <p><span id="parsed-category">-</span> ・ <span id="parsed-date">-</span></p>
+            </div>
+            <strong id="parsed-amount">NT$ 0</strong>
           </div>
-          <strong id="parsed-amount">NT$ 0</strong>
-          <dl>
-            <div>
-              <dt>分類</dt>
-              <dd id="parsed-category">-</dd>
-            </div>
-            <div>
-              <dt>日期</dt>
-              <dd id="parsed-date">-</dd>
-            </div>
-          </dl>
+          <div class="all-records-link">查看全部記錄 <span>›</span></div>
         </article>
 
         <div class="entry-mode-switch" aria-label="新增類型">
