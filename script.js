@@ -66,6 +66,8 @@ function init() {
   elements.recordsTotal = document.querySelector("#records-total");
   elements.monthTotal = document.querySelector("#month-total");
   elements.todayTotal = document.querySelector("#today-total");
+  elements.dailyAverage = document.querySelector("#daily-average");
+  elements.monthCompare = document.querySelector("#month-compare");
   elements.debtList = document.querySelector("#debt-list");
   elements.debtTotal = document.querySelector("#debt-total");
   elements.debtCount = document.querySelector("#debt-count");
@@ -896,6 +898,22 @@ function render() {
 
   elements.monthTotal.textContent = formatMoney(sumAmounts(thisMonthExpenses));
   elements.todayTotal.textContent = formatMoney(sumAmounts(todayExpenses));
+  const elapsedDays = Math.max(1, new Date().getDate());
+  const thisMonthTotal = sumAmounts(thisMonthExpenses);
+  elements.dailyAverage.textContent = formatMoney(thisMonthTotal / elapsedDays);
+  const now = new Date();
+  const previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousEnd = new Date(now.getFullYear(), now.getMonth() - 1, elapsedDays, 23, 59, 59);
+  const previousPeriodTotal = sumAmounts(
+    currencyExpenses.filter((expense) => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate >= previousStart && expenseDate <= previousEnd;
+    })
+  );
+  const comparison = previousPeriodTotal ? Math.round(((thisMonthTotal - previousPeriodTotal) / previousPeriodTotal) * 100) : 0;
+  elements.monthCompare.textContent = `${comparison > 0 ? "+" : ""}${comparison}%`;
+  elements.monthCompare.classList.toggle("is-down", comparison < 0);
+  elements.monthCompare.classList.toggle("is-up", comparison > 0);
   elements.recordsTotal.textContent = formatChartTotal(sumAmounts(selectedAnalysisItems), activeAnalysisType);
   elements.monthBalance.textContent = formatSignedMoney(monthBalance, currency);
   elements.recordsExpenseTotal.textContent = formatPlainNumber(monthExpenseTotal);
