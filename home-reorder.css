@@ -160,3 +160,10 @@
 @media (max-width: 380px) {
   .home-screen .summary-band > div:first-child strong { font-size: 50px; }
 }
+
+.home-screen .summary-band > div,
+.home-screen .summary-band .home-metrics,
+.home-screen .summary-band .home-metrics > div {
+  background: transparent !important;
+  box-shadow: none !important;
+}
