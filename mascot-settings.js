@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 0.9 seconds
-Output:
 (() => {
   const imageFor = (name) => window.__mascotImages?.[name] || "";
   const screens = () => document.querySelectorAll(".screen");
