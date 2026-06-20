@@ -134,3 +134,47 @@
   color: var(--text);
 }
 
+
+/* Keep every branded header independent from legacy page-specific toolbar styles. */
+.mascot-topbar,
+.asset-topbar.mascot-topbar,
+.split-topbar.mascot-topbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  min-height: 48px;
+  gap: 0;
+  overflow: visible !important;
+}
+
+.mascot-topbar .mascot-button,
+.asset-topbar .mascot-button,
+.split-topbar .mascot-button {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+.mascot-topbar .mascot-button img,
+.asset-topbar .mascot-button img,
+.split-topbar .mascot-button img {
+  display: block !important;
+  width: 46px !important;
+  height: 46px !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  object-fit: contain !important;
+}
