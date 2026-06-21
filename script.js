@@ -1,6 +1,6 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v38";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v38";
+const APP_VERSION = "v39";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v39";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -65,10 +65,20 @@ function init() {
   elements.recordsList = document.querySelector("#records-list");
   elements.recordsTotal = document.querySelector("#records-total");
   elements.monthTotal = document.querySelector("#month-total");
-  elements.todayTotal = document.querySelector("#today-total");
-  elements.todayDate = document.querySelector("#today-date");
   elements.dailyAverage = document.querySelector("#daily-average");
   elements.monthCompare = document.querySelector("#month-compare");
+  elements.budgetRemaining = document.querySelector("#budget-remaining");
+  elements.budgetSpent = document.querySelector("#budget-spent");
+  elements.budgetPercent = document.querySelector("#budget-percent");
+  elements.budgetProgress = document.querySelector(".budget-progress");
+  elements.budgetProgressFill = document.querySelector("#budget-progress-fill");
+  elements.budgetEditTrigger = document.querySelector("#budget-edit-trigger");
+  elements.budgetEditSheet = document.querySelector("#budget-edit-sheet");
+  elements.budgetEditForm = document.querySelector("#budget-edit-form");
+  elements.budgetEditInput = document.querySelector("#budget-edit-input");
+  elements.budgetEditLabel = document.querySelector("#budget-edit-label");
+  elements.budgetEditClose = document.querySelector("#budget-edit-close");
+  elements.budgetEditCancel = document.querySelector("#budget-edit-cancel");
   elements.debtList = document.querySelector("#debt-list");
   elements.debtTotal = document.querySelector("#debt-total");
   elements.debtCount = document.querySelector("#debt-count");
@@ -180,6 +190,13 @@ function init() {
   elements.assetEditSheet.addEventListener("click", (event) => {
     if (event.target === elements.assetEditSheet) closeAssetEditor();
   });
+  elements.budgetEditTrigger.addEventListener("click", openBudgetEditor);
+  elements.budgetEditForm.addEventListener("submit", saveBudget);
+  elements.budgetEditClose.addEventListener("click", closeBudgetEditor);
+  elements.budgetEditCancel.addEventListener("click", closeBudgetEditor);
+  elements.budgetEditSheet.addEventListener("click", (event) => {
+    if (event.target === elements.budgetEditSheet) closeBudgetEditor();
+  });
   elements.checkUpdate.addEventListener("click", () => checkForUpdates(true));
   elements.appVersion.textContent = APP_VERSION;
   elements.currencyButtons.forEach((button) => {
@@ -202,10 +219,15 @@ function init() {
   document.querySelectorAll("[data-target-tab]").forEach((button) => {
     button.addEventListener("click", () => showTab(button.dataset.targetTab));
   });
+  document.querySelectorAll("[data-quick-category]").forEach((button) => {
+    button.addEventListener("click", () => prepareQuickExpense(button.dataset.quickCategory));
+  });
 
   if (elements.recentList) elements.recentList.addEventListener("click", handleExpenseListClick);
-  elements.parsedCard.addEventListener("click", openLatestCardEditor);
-  elements.parsedCard.addEventListener("keydown", handleLatestCardKeydown);
+  if (elements.parsedCard) {
+    elements.parsedCard.addEventListener("click", openLatestCardEditor);
+    elements.parsedCard.addEventListener("keydown", handleLatestCardKeydown);
+  }
   elements.recordsList.addEventListener("click", handleExpenseListClick);
   elements.debtList.addEventListener("click", handleDebtDelete);
   elements.expenseEditForm.addEventListener("submit", saveExpenseDateEdit);
@@ -231,8 +253,13 @@ function getDefaultState() {
     debts: [],
     assetSnapshots: {},
     splitBill: getDefaultSplitBill(),
+    budgets: getDefaultBudgets(),
     currency: DEFAULT_CURRENCY,
   };
+}
+
+function getDefaultBudgets() {
+  return { TWD: 5000, JPY: 50000 };
 }
 
 function getDefaultSplitBill() {
@@ -345,8 +372,21 @@ function cleanState(value) {
     debts: value.debts.filter((debt) => isValidDebt(debt) && !isSeedDebt(debt)).map(normalizeMoneyItem),
     assetSnapshots: normalizeAssetSnapshots(value.assetSnapshots),
     splitBill: normalizeSplitBill(value.splitBill),
+    budgets: normalizeBudgets(value.budgets),
     currency: CURRENCY_OPTIONS.has(value.currency) ? value.currency : DEFAULT_CURRENCY,
   };
+}
+
+function normalizeBudgets(value) {
+  const defaults = getDefaultBudgets();
+  const source = value && typeof value === "object" ? value : {};
+
+  return Object.fromEntries(
+    [...CURRENCY_OPTIONS].map((currency) => {
+      const amount = Number(source[currency]);
+      return [currency, Number.isFinite(amount) && amount >= 0 ? Math.round(amount) : defaults[currency]];
+    }),
+  );
 }
 
 function normalizeMoneyItem(item) {
@@ -512,6 +552,48 @@ function setCurrency(currency) {
   state.currency = currency;
   saveState();
   render();
+}
+
+function getBudget(currency = getCurrency()) {
+  return Number(state.budgets?.[currency]) || 0;
+}
+
+function openBudgetEditor() {
+  const currency = getCurrency();
+  elements.budgetEditLabel.textContent = `${getCurrencyLabel(currency)} 預算金額`;
+  elements.budgetEditInput.value = getBudget(currency).toLocaleString("en-US");
+  elements.budgetEditSheet.hidden = false;
+  elements.budgetEditInput.focus();
+  elements.budgetEditInput.select();
+}
+
+function closeBudgetEditor() {
+  elements.budgetEditSheet.hidden = true;
+  elements.budgetEditForm.reset();
+}
+
+function saveBudget(event) {
+  event.preventDefault();
+  const amount = parseNonNegativeAmountInput(elements.budgetEditInput.value);
+  if (amount === null) {
+    elements.budgetEditInput.classList.add("is-invalid");
+    elements.budgetEditInput.focus();
+    return;
+  }
+
+  state.budgets = { ...state.budgets, [getCurrency()]: amount };
+  saveState();
+  closeBudgetEditor();
+  render();
+}
+
+function prepareQuickExpense(category) {
+  if (!category) return;
+  activeEntryType = "expense";
+  elements.expenseInput.value = category;
+  renderModeButtons();
+  elements.expenseInput.focus();
+  elements.expenseInput.setSelectionRange(category.length, category.length);
 }
 
 function setEntryType(type) {
@@ -881,13 +963,11 @@ function showTab(target) {
 
 function render() {
   const nowKey = getMonthKey(new Date());
-  const today = new Date().toDateString();
   const currency = getCurrency();
   const currencyExpenses = state.expenses.filter((expense) => expense.currency === currency);
   const currencyIncomes = state.incomes.filter((income) => income.currency === currency);
   const currencyDebts = state.debts.filter((debt) => debt.currency === currency);
   const thisMonthExpenses = currencyExpenses.filter((expense) => getMonthKey(expense.date) === nowKey);
-  const todayExpenses = currencyExpenses.filter((expense) => new Date(expense.date).toDateString() === today);
   const recentTransactions = combineTransactions(currencyExpenses, currencyIncomes).slice(0, 4);
   const selectedExpenses = currencyExpenses.filter((expense) => getMonthKey(expense.date) === getSelectedMonthKey());
   const selectedIncomes = currencyIncomes.filter((income) => getMonthKey(income.date) === getSelectedMonthKey());
@@ -897,13 +977,9 @@ function render() {
   const monthBalance = monthIncomeTotal - monthExpenseTotal;
   const debtSum = currencyDebts.reduce((sum, debt) => sum + Number(debt.amount), 0);
 
-  elements.monthTotal.textContent = formatMoney(sumAmounts(thisMonthExpenses));
-  elements.todayTotal.textContent = formatMoney(sumAmounts(todayExpenses));
-  const todayDate = new Date();
-  const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
-  elements.todayDate.textContent = `${todayDate.getMonth() + 1}月${todayDate.getDate()}日 (${weekdays[todayDate.getDay()]})`;
   const elapsedDays = Math.max(1, new Date().getDate());
   const thisMonthTotal = sumAmounts(thisMonthExpenses);
+  elements.monthTotal.textContent = formatMoney(thisMonthTotal);
   elements.dailyAverage.textContent = formatMoney(thisMonthTotal / elapsedDays);
   const now = new Date();
   const previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -918,6 +994,7 @@ function render() {
   elements.monthCompare.textContent = `${comparison > 0 ? "+" : ""}${comparison}%`;
   elements.monthCompare.classList.toggle("is-down", comparison < 0);
   elements.monthCompare.classList.toggle("is-up", comparison > 0);
+  renderHomeBudget(thisMonthTotal, currency);
   elements.recordsTotal.textContent = formatChartTotal(sumAmounts(selectedAnalysisItems), activeAnalysisType);
   elements.monthBalance.textContent = formatSignedMoney(monthBalance, currency);
   elements.recordsExpenseTotal.textContent = formatPlainNumber(monthExpenseTotal);
@@ -958,6 +1035,21 @@ function formatSignedMoney(amount, currency = getCurrency()) {
   return `${sign}${formatMoney(Math.abs(amount), currency)}`;
 }
 
+function renderHomeBudget(spent, currency) {
+  const budget = getBudget(currency);
+  const remaining = budget - spent;
+  const percent = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+  const progress = Math.min(100, Math.max(0, percent));
+
+  elements.budgetRemaining.textContent = remaining >= 0 ? formatMoney(remaining, currency) : `超出 ${formatMoney(Math.abs(remaining), currency)}`;
+  elements.budgetRemaining.classList.toggle("is-over-budget", remaining < 0);
+  elements.budgetPercent.textContent = `${percent}%`;
+  elements.budgetEditTrigger.textContent = `預算 ${formatMoney(budget, currency)}`;
+  elements.budgetProgress.setAttribute("aria-valuenow", String(progress));
+  elements.budgetProgressFill.style.width = `${progress}%`;
+  elements.budgetProgressFill.classList.toggle("is-over-budget", remaining < 0);
+}
+
 function renderModeButtons() {
   const currency = getCurrency();
   elements.currencyButtons.forEach((button) => button.classList.toggle("active", button.dataset.currency === currency));
@@ -973,6 +1065,8 @@ function combineTransactions(expenses, incomes) {
 }
 
 function renderLatestTransaction(item) {
+  if (!elements.parsedCard) return;
+
   if (!item) {
     document.querySelector("#parsed-title").textContent = "尚未新增";
     document.querySelector("#parsed-amount").textContent = formatMoney(0);

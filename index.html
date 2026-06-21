@@ -20,8 +20,8 @@
     </style>
     <link rel="stylesheet" href="ios-finance.css?v=30-ios-finance" />
       <link rel="stylesheet" href="mascot-settings.css?v=35-header-align" />
-      <meta name="app-version" content="v38" />
-      <link rel="stylesheet" href="home-reorder.css?v=4" />
+      <meta name="app-version" content="v39" />
+      <link rel="stylesheet" href="home-reorder.css?v=5" />
   </head>
   <body>
     <main class="phone-shell" aria-label="蛋黃小帳 App">
@@ -42,7 +42,7 @@
         </header>
 
         <section class="summary-band">
-          <div>
+          <div class="month-summary-card">
             <p>本月總支出</p>
             <strong id="month-total">NT$ 0</strong>
           </div>
@@ -58,42 +58,44 @@
           </div>
         </section>
 
-        <section class="home-today">
-          <div>
-            <p>今日支出</p>
-            <span id="today-date"></span>
+        <section class="budget-panel" aria-label="本月預算">
+          <div class="budget-heading">
+            <div>
+              <p>預算剩餘</p>
+              <strong id="budget-remaining">NT$ 0</strong>
+            </div>
+            <button class="budget-edit-button" type="button" id="budget-edit-trigger">預算 NT$ 5,000</button>
           </div>
-          <strong id="today-total">NT$ 0</strong>
+          <div class="budget-progress-row">
+            <div class="budget-progress" role="progressbar" aria-label="預算使用進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <i id="budget-progress-fill"></i>
+            </div>
+            <b id="budget-percent">0%</b>
+          </div>
         </section>
 
-        <h2 class="home-latest-heading">最新一筆紀錄</h2>
-        <article class="parsed-card" id="parsed-card" aria-live="polite">
-          <div>
-            <div>
-              <h2 id="parsed-title">尚未新增</h2>
-              <p><span id="parsed-category">-</span> ・ <span id="parsed-date">-</span></p>
-            </div>
-            <strong id="parsed-amount">NT$ 0</strong>
+        <section class="quick-entry-section" aria-label="快速記帳">
+          <div class="quick-entry-heading">
+            <h2>今天花了什麼？</h2>
           </div>
-          <div class="all-records-link">查看全部記錄 <span>›</span></div>
-        </article>
-
-        <div class="entry-mode-switch" aria-label="新增類型">
-          <button class="active" type="button" data-entry-type="expense">支出</button>
-          <button type="button" data-entry-type="income">收入</button>
-        </div>
-
-        <form class="composer" id="expense-form">
-          <input
-            id="expense-input"
-            aria-label="輸入記帳文字"
-            placeholder="輸入一句話"
-            autocomplete="off"
-            enterkeyhint="send"
-            inputmode="text"
-          />
-          <button type="submit" aria-label="送出">+</button>
-        </form>
+          <form class="composer" id="expense-form">
+            <input
+              id="expense-input"
+              aria-label="輸入記帳文字"
+              placeholder="輸入一句話快速記帳"
+              autocomplete="off"
+              enterkeyhint="send"
+              inputmode="text"
+            />
+            <button type="submit" aria-label="送出">+</button>
+          </form>
+          <div class="quick-category-grid" aria-label="常用分類">
+            <button type="button" data-quick-category="午餐"><i class="quick-category-icon lunch" aria-hidden="true"></i><span>午餐</span></button>
+            <button type="button" data-quick-category="飲料"><i class="quick-category-icon drink" aria-hidden="true"></i><span>飲料</span></button>
+            <button type="button" data-quick-category="加油"><i class="quick-category-icon fuel" aria-hidden="true"></i><span>加油</span></button>
+            <button type="button" data-quick-category="購物"><i class="quick-category-icon shopping" aria-hidden="true"></i><span>購物</span></button>
+          </div>
+        </section>
       </section>
 
       <section class="screen" data-screen="records">
@@ -248,7 +250,7 @@
           </li>
           <li>
             <span>目前版本</span>
-            <strong id="app-version">v38</strong>
+            <strong id="app-version">v39</strong>
           </li>
           <li>
             <span>加入主畫面</span>
@@ -343,6 +345,28 @@
             <ul id="split-suggestion-list"></ul>
           </div>
         </section>
+      </section>
+
+      <section class="edit-sheet" id="budget-edit-sheet" aria-label="編輯本月預算" hidden>
+        <div class="edit-card budget-edit-card">
+          <div class="edit-header">
+            <div>
+              <p class="eyebrow">本月預算</p>
+              <h2>編輯預算</h2>
+            </div>
+            <button type="button" class="sheet-close" id="budget-edit-close" aria-label="關閉">x</button>
+          </div>
+          <form id="budget-edit-form" class="budget-edit-form">
+            <label>
+              <span id="budget-edit-label">預算金額</span>
+              <input id="budget-edit-input" type="text" inputmode="numeric" autocomplete="off" required />
+            </label>
+            <div class="edit-actions">
+              <button type="button" class="secondary-action" id="budget-edit-cancel">取消</button>
+              <button type="submit">儲存</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <section class="edit-sheet" id="asset-edit-sheet" aria-label="編輯本月資產" hidden>

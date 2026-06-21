@@ -1,4 +1,4 @@
-const CACHE_NAME = "kai-expense-tracker-v38-home-density";
+const CACHE_NAME = "kai-expense-tracker-v39-quick-icons";
 const ASSETS = [
   "./",
   "./index.html",
@@ -13,6 +13,10 @@ const ASSETS = [
   "./mascot-image-debts.js",
   "./mascot-settings.js",
   "./script.js",
+  "./assets/quick-lunch.png",
+  "./assets/quick-drink.png",
+  "./assets/quick-fuel.png",
+  "./assets/quick-shopping.png",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
