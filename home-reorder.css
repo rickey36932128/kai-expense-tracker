@@ -299,7 +299,7 @@
 }
 
 .home-recent-section {
-  height: 260px;
+  height: 220px;
   margin-top: 18px;
   padding: 16px;
   overflow: hidden;
@@ -340,7 +340,7 @@
 }
 
 .home-recent-list {
-  height: 188px;
+  height: 148px;
   margin: 12px 0 0;
   padding: 0;
   list-style: none;
@@ -420,7 +420,7 @@
 
 .home-recent-empty {
   display: grid;
-  min-height: 188px;
+  min-height: 148px;
   place-content: center;
   justify-items: center;
   text-align: center;

@@ -1,6 +1,6 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v40";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v40";
+const APP_VERSION = "v41";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v41";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -973,7 +973,7 @@ function render() {
   const currencyIncomes = state.incomes.filter((income) => income.currency === currency);
   const currencyDebts = state.debts.filter((debt) => debt.currency === currency);
   const thisMonthExpenses = currencyExpenses.filter((expense) => getMonthKey(expense.date) === nowKey);
-  const recentTransactions = combineTransactions(currencyExpenses, currencyIncomes).slice(0, 3);
+  const recentTransactions = combineTransactions(currencyExpenses, currencyIncomes).slice(0, 2);
   const selectedExpenses = currencyExpenses.filter((expense) => getMonthKey(expense.date) === getSelectedMonthKey());
   const selectedIncomes = currencyIncomes.filter((income) => getMonthKey(income.date) === getSelectedMonthKey());
   const selectedAnalysisItems = activeAnalysisType === "income" ? selectedIncomes : selectedExpenses;
