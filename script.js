@@ -1,6 +1,6 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v39";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v39";
+const APP_VERSION = "v40";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v40";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -54,6 +54,7 @@ let activeEntryType = "expense";
 let activeAnalysisType = "expense";
 let refreshingForUpdate = false;
 let updateStatusTimer = 0;
+let entrySuccessTimer = 0;
 let splitPersonDraftId = 5;
 
 document.addEventListener("DOMContentLoaded", init);
@@ -62,6 +63,7 @@ function init() {
   elements.tabButtons = document.querySelectorAll(".tab-bar button");
   elements.screens = document.querySelectorAll(".screen");
   elements.recentList = document.querySelector("#recent-list");
+  elements.homeRecentList = document.querySelector("#home-recent-list");
   elements.recordsList = document.querySelector("#records-list");
   elements.recordsTotal = document.querySelector("#records-total");
   elements.monthTotal = document.querySelector("#month-total");
@@ -119,6 +121,7 @@ function init() {
   elements.parsedDate = document.querySelector("#parsed-date");
   elements.expenseForm = document.querySelector("#expense-form");
   elements.expenseInput = document.querySelector("#expense-input");
+  elements.entrySuccess = document.querySelector("#entry-success");
   elements.debtForm = document.querySelector("#debt-form");
   elements.splitEventName = document.querySelector("#split-event-name");
   elements.splitPeopleCount = document.querySelector("#split-people-count");
@@ -224,6 +227,7 @@ function init() {
   });
 
   if (elements.recentList) elements.recentList.addEventListener("click", handleExpenseListClick);
+  if (elements.homeRecentList) elements.homeRecentList.addEventListener("click", handleExpenseListClick);
   if (elements.parsedCard) {
     elements.parsedCard.addEventListener("click", openLatestCardEditor);
     elements.parsedCard.addEventListener("keydown", handleLatestCardKeydown);
@@ -327,6 +331,7 @@ function createMoneyItem(title, amount, category = "飲食", date = new Date()) 
     category,
     currency: getCurrency(),
     date: new Date(date).toISOString(),
+    createdAt: new Date().toISOString(),
   };
 }
 
@@ -529,8 +534,7 @@ function hasCorruptText(value) {
 }
 
 function isSeedExpense(expense) {
-  const seeds = new Set(["咖啡:85", "早餐:85", "捷運:35", "午餐:120"]);
-  return seeds.has(`${expense.title}:${Number(expense.amount)}`);
+  return typeof expense.id === "string" && expense.id.startsWith("seed-");
 }
 
 function isSeedDebt(debt) {
@@ -704,6 +708,7 @@ function addExpenseFromText(event) {
   elements.expenseInput.value = "";
   elements.expenseInput.focus();
   render();
+  showEntrySuccess(item);
 }
 
 function handleExpenseInputKeydown(event) {
@@ -968,7 +973,7 @@ function render() {
   const currencyIncomes = state.incomes.filter((income) => income.currency === currency);
   const currencyDebts = state.debts.filter((debt) => debt.currency === currency);
   const thisMonthExpenses = currencyExpenses.filter((expense) => getMonthKey(expense.date) === nowKey);
-  const recentTransactions = combineTransactions(currencyExpenses, currencyIncomes).slice(0, 4);
+  const recentTransactions = combineTransactions(currencyExpenses, currencyIncomes).slice(0, 3);
   const selectedExpenses = currencyExpenses.filter((expense) => getMonthKey(expense.date) === getSelectedMonthKey());
   const selectedIncomes = currencyIncomes.filter((income) => getMonthKey(income.date) === getSelectedMonthKey());
   const selectedAnalysisItems = activeAnalysisType === "income" ? selectedIncomes : selectedExpenses;
@@ -1011,6 +1016,7 @@ function render() {
 
   renderLatestTransaction(recentTransactions[0]);
   if (elements.recentList) renderTransactionList(elements.recentList, recentTransactions, "目前沒有紀錄");
+  if (elements.homeRecentList) renderHomeRecentList(recentTransactions);
   renderCategoryAnalysis(selectedAnalysisItems, activeAnalysisType);
   renderDebtList(currencyDebts);
   renderAssets(currency);
@@ -1061,7 +1067,73 @@ function combineTransactions(expenses, incomes) {
   return [
     ...expenses.map((item) => ({ ...item, type: "expense" })),
     ...incomes.map((item) => ({ ...item, type: "income" })),
-  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  ].sort((a, b) => getTransactionTimestamp(b) - getTransactionTimestamp(a));
+}
+
+function getTransactionTimestamp(item) {
+  const timestamp = new Date(item.createdAt || item.date).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function renderHomeRecentList(transactions) {
+  if (!transactions.length) {
+    elements.homeRecentList.innerHTML = `
+      <li class="home-recent-empty">
+        <img src="${getHomeMascotSource()}" alt="蛋黃小帳吉祥物" />
+        <strong>尚未新增任何紀錄</strong>
+        <p>開始記帳吧，掌握每一筆開銷！</p>
+      </li>
+    `;
+    return;
+  }
+
+  elements.homeRecentList.innerHTML = transactions
+    .map(
+      (item) => `
+        <li class="home-recent-item" data-edit-money="${item.id}" data-edit-money-type="${item.type}" ${item.type === "expense" ? `data-edit-expense="${item.id}"` : ""}>
+          <span class="home-recent-icon ${getHomeRecentIcon(item)}" aria-hidden="true"></span>
+          <div class="home-recent-copy">
+            <strong>${escapeHtml(item.title)}</strong>
+            <time>${formatHomeRecentTime(item)}</time>
+          </div>
+          <b class="${item.type === "income" ? "is-income" : ""}">${item.type === "income" ? "+" : ""}${formatMoney(item.amount, item.currency)}</b>
+        </li>
+      `,
+    )
+    .join("");
+}
+
+function getHomeRecentIcon(item) {
+  const text = `${item.title} ${item.category}`;
+  if (/飲料|咖啡|茶|果汁|奶茶/.test(text)) return "drink";
+  if (/加油|油錢|停車|車票|計程車|交通/.test(text)) return "fuel";
+  if (/購物|衣服|服裝|鞋子|配件/.test(text)) return "shopping";
+  return "lunch";
+}
+
+function getHomeMascotSource() {
+  return window.__mascotImages?.home || "";
+}
+
+function formatHomeRecentTime(item) {
+  const date = new Date(item.createdAt || item.date);
+  if (Number.isNaN(date.getTime())) return "--";
+
+  const day = date.toDateString() === new Date().toDateString() ? "今天" : formatShortDateLabel(date);
+  const time = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  return `${day} ${time}`;
+}
+
+function showEntrySuccess(item) {
+  if (!elements.entrySuccess) return;
+
+  if (entrySuccessTimer) window.clearTimeout(entrySuccessTimer);
+  elements.entrySuccess.textContent = `✓ 已記錄 ${item.title} ${getCurrencyLabel(item.currency)}${Number(item.amount).toLocaleString(item.currency === "JPY" ? "ja-JP" : "zh-Hant-TW")}`;
+  elements.entrySuccess.hidden = false;
+  entrySuccessTimer = window.setTimeout(() => {
+    elements.entrySuccess.hidden = true;
+    entrySuccessTimer = 0;
+  }, 2000);
 }
 
 function renderLatestTransaction(item) {

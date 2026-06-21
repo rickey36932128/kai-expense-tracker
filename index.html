@@ -20,8 +20,8 @@
     </style>
     <link rel="stylesheet" href="ios-finance.css?v=30-ios-finance" />
       <link rel="stylesheet" href="mascot-settings.css?v=35-header-align" />
-      <meta name="app-version" content="v39" />
-      <link rel="stylesheet" href="home-reorder.css?v=5" />
+      <meta name="app-version" content="v40" />
+      <link rel="stylesheet" href="home-reorder.css?v=6" />
   </head>
   <body>
     <main class="phone-shell" aria-label="蛋黃小帳 App">
@@ -78,6 +78,7 @@
           <div class="quick-entry-heading">
             <h2>今天花了什麼？</h2>
           </div>
+          <p class="entry-success" id="entry-success" role="status" aria-live="polite" hidden></p>
           <form class="composer" id="expense-form">
             <input
               id="expense-input"
@@ -95,6 +96,14 @@
             <button type="button" data-quick-category="加油"><i class="quick-category-icon fuel" aria-hidden="true"></i><span>加油</span></button>
             <button type="button" data-quick-category="購物"><i class="quick-category-icon shopping" aria-hidden="true"></i><span>購物</span></button>
           </div>
+        </section>
+
+        <section class="home-recent-section" aria-labelledby="home-recent-title">
+          <div class="home-recent-heading">
+            <h2 id="home-recent-title">最近紀錄</h2>
+            <button type="button" data-target-tab="records">查看全部 <span aria-hidden="true">›</span></button>
+          </div>
+          <ul class="home-recent-list" id="home-recent-list" aria-live="polite"></ul>
         </section>
       </section>
 
@@ -250,7 +259,7 @@
           </li>
           <li>
             <span>目前版本</span>
-            <strong id="app-version">v39</strong>
+            <strong id="app-version">v40</strong>
           </li>
           <li>
             <span>加入主畫面</span>

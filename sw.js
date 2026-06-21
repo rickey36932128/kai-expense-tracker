@@ -1,4 +1,4 @@
-const CACHE_NAME = "kai-expense-tracker-v39-quick-icons";
+const CACHE_NAME = "kai-expense-tracker-v40-home-recent";
 const ASSETS = [
   "./",
   "./index.html",
