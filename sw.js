@@ -1,4 +1,4 @@
-const CACHE_NAME = "kai-expense-tracker-v42-home-spacing";
+const CACHE_NAME = "kai-expense-tracker-v43-home-bottom-padding";
 const ASSETS = [
   "./",
   "./index.html",

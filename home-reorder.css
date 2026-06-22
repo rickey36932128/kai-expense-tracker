@@ -5,6 +5,7 @@
 
 .home-screen {
   padding-inline: 16px;
+  padding-bottom: calc(128px + env(safe-area-inset-bottom));
   overflow-y: auto;
 }
 
