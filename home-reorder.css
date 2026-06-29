@@ -823,3 +823,21 @@ body {
     max-height: 80px;
   }
 }
+
+/* Keep navigation fixed to the visual viewport without exceeding the app width. */
+.tab-bar {
+  position: fixed;
+  right: auto;
+  left: 50%;
+  width: min(100vw, 430px);
+  transform: translateX(-50%);
+}
+
+@media (max-width: 460px) {
+  .tab-bar {
+    right: 0;
+    left: 0;
+    width: auto;
+    transform: none;
+  }
+}
