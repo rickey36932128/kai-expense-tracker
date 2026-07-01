@@ -1,10 +1,11 @@
-const CACHE_NAME = "kai-expense-tracker-v47-category-cards";
+const CACHE_NAME = "kai-expense-tracker-v48-balanced-dashboard";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./ios-finance.css",
   "./home-reorder.css",
+  "./home-dashboard-v48.css",
   "./mascot-settings.css",
   "./mascot-image-home.js",
   "./mascot-image-records.js",
