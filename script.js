@@ -1,7 +1,7 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v53";
-const APP_CACHE_NAME = "kai-expense-tracker-v53-home-visual-refresh";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v53";
+const APP_VERSION = "v54";
+const APP_CACHE_NAME = "kai-expense-tracker-v54-home-ratio-tune";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v54";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
