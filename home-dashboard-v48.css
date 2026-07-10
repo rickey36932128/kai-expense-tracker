@@ -447,7 +447,7 @@
   }
 }
 
-@media (max-height: 760px) {
+@media (max-height: 800px) {
   .home-screen.active {
     gap: 8px;
     padding-top: calc(4px + env(safe-area-inset-top));
@@ -556,6 +556,111 @@
   .home-screen .home-recent-empty img {
     width: 32px;
     height: 32px;
+  }
+}
+
+/* v52: home-only density tune; keep behavior, colors, and navigation unchanged. */
+.home-screen .budget-panel {
+  flex: 0 0 auto;
+  padding: 15px 16px;
+}
+
+.home-screen .budget-heading p {
+  margin-bottom: 3px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 21px;
+}
+
+.home-screen .budget-progress-row {
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.home-screen .budget-progress-row b {
+  min-width: 42px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 26px;
+}
+
+.home-screen .quick-entry-section {
+  flex: 0 0 auto;
+  padding: 13px 12px 12px;
+}
+
+.home-screen .quick-entry-heading {
+  margin-bottom: 8px;
+}
+
+.home-screen .quick-category-grid {
+  flex: 0 0 auto;
+  margin-top: 10px;
+}
+
+.home-screen .quick-category-grid button {
+  height: auto;
+  min-height: 64px;
+  max-height: none;
+  padding: 7px 3px 6px;
+}
+
+.home-screen .home-recent-section {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+  padding: 13px 16px 14px;
+}
+
+.home-screen .home-recent-list {
+  flex: 0 0 auto;
+  height: auto;
+  max-height: none;
+  margin-top: 8px;
+}
+
+.home-screen .home-recent-item {
+  min-height: 58px;
+  padding: 5px 0;
+}
+
+.home-screen .home-recent-empty {
+  flex: 0 0 auto;
+  min-height: 118px;
+  padding: 6px 0 2px;
+}
+
+@media (max-height: 800px) {
+  .home-screen .budget-panel {
+    padding: 12px 14px;
+  }
+
+  .home-screen .budget-heading p {
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .home-screen .budget-progress-row b {
+    min-width: 38px;
+    font-size: 20px;
+    line-height: 24px;
+  }
+
+  .home-screen .quick-entry-section {
+    padding: 11px 10px 10px;
+  }
+
+  .home-screen .quick-category-grid button {
+    min-height: 58px;
+  }
+
+  .home-screen .home-recent-section {
+    padding: 11px 14px 13px;
+  }
+
+  .home-screen .home-recent-item {
+    min-height: 54px;
+    padding: 4px 0;
   }
 }
 

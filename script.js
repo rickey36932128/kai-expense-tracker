@@ -1,7 +1,7 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v51";
-const APP_CACHE_NAME = "kai-expense-tracker-v51-budget-sheet-keyboard";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v51";
+const APP_VERSION = "v52";
+const APP_CACHE_NAME = "kai-expense-tracker-v52-home-layout-density";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v52";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";

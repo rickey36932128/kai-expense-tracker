@@ -1,4 +1,4 @@
-const CACHE_NAME = "kai-expense-tracker-v51-budget-sheet-keyboard";
+const CACHE_NAME = "kai-expense-tracker-v52-home-layout-density";
 const ASSETS = [
   "./",
   "./index.html",
