@@ -178,3 +178,7 @@
   overflow: visible !important;
   object-fit: contain !important;
 }
+
+.asset-topbar.mascot-topbar #asset-month-action {
+  margin-left: auto;
+}

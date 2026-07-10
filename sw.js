@@ -1,23 +1,21 @@
-const CACHE_NAME = "kai-expense-tracker-v49-plus-align";
+const CACHE_NAME = "kai-expense-tracker-v44-assets-month-editor";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./ios-finance.css",
   "./home-reorder.css",
-  "./home-dashboard-v48.css",
   "./mascot-settings.css",
   "./mascot-image-home.js",
-  "./mascot-image-records.js",
-  "./mascot-image-assets.js",
-  "./mascot-image-split.js",
-  "./mascot-image-debts.js",
   "./mascot-settings.js",
   "./script.js",
   "./assets/quick-lunch.png",
   "./assets/quick-drink.png",
   "./assets/quick-fuel.png",
   "./assets/quick-shopping.png",
+  "./assets/ui/calendar-clock.svg",
+  "./assets/ui/trending-up.svg",
+  "./assets/ui/chevron-right.svg",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -43,7 +41,19 @@ self.addEventListener("message", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("./")));
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.ok) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put("./", response.clone());
+              cache.put("./index.html", response.clone());
+            });
+          }
+          return response;
+        })
+        .catch(() => caches.match("./index.html").then((response) => response || caches.match("./")))
+    );
     return;
   }
   event.respondWith(
@@ -54,6 +64,6 @@ self.addEventListener("fetch", (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(() => caches.match(event.request).then((response) => response || caches.match(event.request, { ignoreSearch: true })))
   );
 });

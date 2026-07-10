@@ -1,9 +1,11 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v49";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v49";
+const APP_VERSION = "v44";
+const APP_CACHE_NAME = "kai-expense-tracker-v44-assets-month-editor";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v44";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
+const APP_TIME_ZONE = "Asia/Taipei";
 const CURRENCY_OPTIONS = new Set(["TWD", "JPY"]);
 const EXPENSE_CATEGORY_RULES = [
   {
@@ -644,9 +646,21 @@ function formatFullDateLabel(value) {
   return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
 }
 
-function getMonthKey(value) {
+function getTaipeiDateParts(value) {
   const date = new Date(value);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  return Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+}
+
+function getMonthKey(value) {
+  const { year, month } = getTaipeiDateParts(value);
+  return `${year}-${month}`;
 }
 
 function getSelectedMonthKey() {
@@ -1097,6 +1111,7 @@ function renderHomeRecentList(transactions) {
             <time>${formatHomeRecentTime(item)}</time>
           </div>
           <b class="${item.type === "income" ? "is-income" : ""}">${item.type === "income" ? "+" : ""}${formatMoney(item.amount, item.currency)}</b>
+          <span class="home-recent-row-chevron" aria-hidden="true"></span>
         </li>
       `,
     )
@@ -1295,8 +1310,9 @@ function getChartColor(index) {
 function renderAssets(currency) {
   if (!elements.netWorthTotal) return;
 
-  const monthKey = getMonthKey(new Date());
-  const previousKey = getOffsetMonthKey(new Date(), -1);
+  const today = new Date();
+  const monthKey = getMonthKey(today);
+  const previousKey = getOffsetMonthKey(today, -1);
   const snapshot = getAssetSnapshot(monthKey);
   const previousSnapshot = getAssetSnapshot(previousKey);
   const hasCurrentSnapshot = Boolean(state.assetSnapshots?.[monthKey]);
@@ -1352,6 +1368,13 @@ function saveAssetSnapshot(event) {
 
   if (!assets || !liabilities) return;
 
+  upsertAssetSnapshot(monthKey, assets, liabilities);
+  saveState();
+  closeAssetEditor();
+  render();
+}
+
+function upsertAssetSnapshot(monthKey, assets, liabilities) {
   state.assetSnapshots = {
     ...state.assetSnapshots,
     [monthKey]: {
@@ -1360,9 +1383,6 @@ function saveAssetSnapshot(event) {
       updatedAt: new Date().toISOString(),
     },
   };
-  saveState();
-  closeAssetEditor();
-  render();
 }
 
 function fillAssetInputs(values) {
@@ -1461,8 +1481,8 @@ function getRecentMonthKeys(count) {
 }
 
 function getOffsetMonthKey(value, offset) {
-  const date = new Date(value);
-  date.setMonth(date.getMonth() + offset);
+  const { year, month } = getTaipeiDateParts(value);
+  const date = new Date(Number(year), Number(month) - 1 + offset, 1, 12, 0, 0);
   return getMonthKey(date);
 }
 
@@ -1873,7 +1893,7 @@ async function repairAppCache() {
     const keys = await caches.keys();
     await Promise.all(
       keys
-        .filter((key) => key.startsWith("kai-expense-tracker-") && key !== `kai-expense-tracker-${APP_VERSION}`)
+        .filter((key) => key.startsWith("kai-expense-tracker-") && key !== APP_CACHE_NAME)
         .map((key) => caches.delete(key))
     );
     localStorage.setItem(CACHE_REPAIR_KEY, "done");

@@ -14,8 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function replaceHeader(selector, name, options = {}) {
     const header = document.querySelector(selector);
     if (!header) return;
+    const preservedNodes = typeof options.preserve === "function" ? options.preserve(header).filter(Boolean) : [];
     header.classList.add("mascot-topbar");
-    header.innerHTML = logo(name, "settings") + (options.trailing || "");
+    header.replaceChildren();
+    header.insertAdjacentHTML("beforeend", logo(name, "settings") + (options.trailing || ""));
+    preservedNodes.forEach((node) => header.appendChild(node));
   }
 
   function addSettings() {
@@ -75,7 +78,9 @@ document.addEventListener("DOMContentLoaded", () => {
   replaceHeader(".home-screen .top-bar", "home");
   replaceHeader("[data-screen='records'] .top-bar", "records");
   replaceHeader("[data-screen='debts'] .top-bar", "debts");
-  replaceHeader(".asset-topbar", "assets");
+  replaceHeader(".asset-topbar", "assets", {
+    preserve: (header) => [header.querySelector("#asset-month-action")],
+  });
   replaceHeader(".split-topbar", "split");
   document.querySelectorAll("[data-mascot-target]").forEach((button) => button.addEventListener("click", () => showScreen(button.dataset.mascotTarget)));
   const currency = JSON.parse(localStorage.getItem("kai-expense-tracker-v1") || "{}").currency || "TWD";
