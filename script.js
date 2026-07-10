@@ -1,7 +1,7 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v50";
-const APP_CACHE_NAME = "kai-expense-tracker-v50-restore-latest-assets-fix";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v50";
+const APP_VERSION = "v51";
+const APP_CACHE_NAME = "kai-expense-tracker-v51-budget-sheet-keyboard";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v51";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -245,6 +245,10 @@ function init() {
   elements.expenseEditSheet.addEventListener("click", (event) => {
     if (event.target === elements.expenseEditSheet) closeExpenseEditor();
   });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", syncKeyboardInset);
+    window.visualViewport.addEventListener("scroll", syncKeyboardInset);
+  }
 
   saveState();
   render();
@@ -569,13 +573,17 @@ function openBudgetEditor() {
   elements.budgetEditLabel.textContent = `${getCurrencyLabel(currency)} 預算金額`;
   elements.budgetEditInput.value = getBudget(currency).toLocaleString("en-US");
   elements.budgetEditSheet.hidden = false;
+  updateSheetOpenState();
+  syncKeyboardInset();
   elements.budgetEditInput.focus();
   elements.budgetEditInput.select();
+  window.requestAnimationFrame(() => elements.budgetEditInput.scrollIntoView({ block: "center" }));
 }
 
 function closeBudgetEditor() {
   elements.budgetEditSheet.hidden = true;
   elements.budgetEditForm.reset();
+  updateSheetOpenState();
 }
 
 function saveBudget(event) {
@@ -816,6 +824,8 @@ function openExpenseEditorLegacy(id) {
   elements.expenseEditMeta.textContent = `${expense.category} · ${formatDateLabel(expense.date)}`;
   elements.expenseEditAmount.textContent = `-${formatMoney(expense.amount, expense.currency)}`;
   elements.expenseEditSheet.hidden = false;
+  updateSheetOpenState();
+  syncKeyboardInset();
   elements.expenseEditDate.focus();
 }
 
@@ -839,6 +849,8 @@ function openMoneyEditor(id, type) {
   elements.expenseEditAmount.classList.toggle("is-income", type === "income");
   setEditRecordType(type);
   elements.expenseEditSheet.hidden = false;
+  updateSheetOpenState();
+  syncKeyboardInset();
   elements.expenseEditDate.focus();
 }
 
@@ -850,6 +862,7 @@ function closeExpenseEditor() {
   elements.expenseEditType.dataset.originalType = "";
   elements.expenseEditAmount.classList.remove("is-income");
   elements.expenseEditDateLabel.textContent = "-";
+  updateSheetOpenState();
 }
 
 function saveExpenseDateEdit(event) {
@@ -1351,12 +1364,34 @@ function openAssetEditor() {
   fillAssetInputs(snapshot.assets);
   fillAssetInputs(snapshot.liabilities);
   elements.assetEditSheet.hidden = false;
+  updateSheetOpenState();
+  syncKeyboardInset();
   elements.assetInputs.bank.focus();
 }
 
 function closeAssetEditor() {
   elements.assetEditSheet.hidden = true;
   elements.assetEditForm.reset();
+  updateSheetOpenState();
+}
+
+function updateSheetOpenState() {
+  const hasOpenSheet = [elements.budgetEditSheet, elements.assetEditSheet, elements.expenseEditSheet].some((sheet) => sheet && !sheet.hidden);
+  document.body.classList.toggle("has-open-sheet", hasOpenSheet);
+  if (!hasOpenSheet) {
+    document.documentElement.style.setProperty("--keyboard-inset", "0px");
+    document.documentElement.style.setProperty("--sheet-viewport-height", "100dvh");
+  }
+}
+
+function syncKeyboardInset() {
+  if (!window.visualViewport) {
+    document.documentElement.style.setProperty("--sheet-viewport-height", "100dvh");
+    return;
+  }
+  const inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+  document.documentElement.style.setProperty("--keyboard-inset", `${Math.round(inset)}px`);
+  document.documentElement.style.setProperty("--sheet-viewport-height", `${Math.round(window.visualViewport.height)}px`);
 }
 
 function saveAssetSnapshot(event) {
