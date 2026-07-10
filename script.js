@@ -1,7 +1,7 @@
 const STORAGE_KEY = "kai-expense-tracker-v1";
-const APP_VERSION = "v44";
-const APP_CACHE_NAME = "kai-expense-tracker-v44-assets-month-editor";
-const CACHE_REPAIR_KEY = "kai-cache-repair-v44";
+const APP_VERSION = "v50";
+const APP_CACHE_NAME = "kai-expense-tracker-v50-restore-latest-assets-fix";
+const CACHE_REPAIR_KEY = "kai-cache-repair-v50";
 const UPDATE_CHECK_INTERVAL = 5 * 60 * 1000;
 const UPDATE_STATUS_HIDE_MS = 2200;
 const DEFAULT_CURRENCY = "TWD";
@@ -1111,7 +1111,6 @@ function renderHomeRecentList(transactions) {
             <time>${formatHomeRecentTime(item)}</time>
           </div>
           <b class="${item.type === "income" ? "is-income" : ""}">${item.type === "income" ? "+" : ""}${formatMoney(item.amount, item.currency)}</b>
-          <span class="home-recent-row-chevron" aria-hidden="true"></span>
         </li>
       `,
     )

@@ -1,12 +1,17 @@
-const CACHE_NAME = "kai-expense-tracker-v44-assets-month-editor";
+const CACHE_NAME = "kai-expense-tracker-v50-restore-latest-assets-fix";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./ios-finance.css",
   "./home-reorder.css",
+  "./home-dashboard-v48.css",
   "./mascot-settings.css",
   "./mascot-image-home.js",
+  "./mascot-image-records.js",
+  "./mascot-image-assets.js",
+  "./mascot-image-split.js",
+  "./mascot-image-debts.js",
   "./mascot-settings.js",
   "./script.js",
   "./assets/quick-lunch.png",
